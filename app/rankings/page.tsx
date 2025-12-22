@@ -1,8 +1,15 @@
 import Link from 'next/link';
 import { Trophy } from 'lucide-react';
-import { Categoria } from '@/data/rankings';
 
-const categorias: { nome: Categoria; descricao: string; pontosMin: number; pontosMax: number | null }[] = [
+type Categoria = 'A' | 'B' | 'C' | 'D' | 'FUN';
+type Genero = 'Masculino' | 'Feminino';
+
+const categorias: { 
+  nome: Categoria; 
+  descricao: string; 
+  pontosMin: number; 
+  pontosMax: number | null;
+}[] = [
   { nome: 'A', descricao: 'Elite', pontosMin: 1000, pontosMax: null },
   { nome: 'B', descricao: 'Avançado', pontosMin: 601, pontosMax: 1000 },
   { nome: 'C', descricao: 'Intermediário', pontosMin: 301, pontosMax: 600 },
@@ -42,46 +49,83 @@ export default function RankingsPage() {
             Rankings por Categoria
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Selecione uma categoria para visualizar o ranking completo. 
+            Selecione uma categoria e gênero para visualizar o ranking completo. 
             Os jogadores são classificados de acordo com sua pontuação acumulada nos últimos 12 meses.
           </p>
         </div>
 
         {/* Categorias Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {categorias.map((categoria) => (
-            <Link
-              key={categoria.nome}
-              href={`/ranking/${categoria.nome.toLowerCase()}`}
-              className="group"
-            >
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br ${getCategoriaColor(categoria.nome)} mb-4`}>
-                  <Trophy className="w-8 h-8 text-white" />
-                </div>
-                <h2 className={`text-2xl font-bold mb-2 ${getCategoriaTextColor(categoria.nome)}`}>
+        {categorias.map((categoria) => (
+          <div key={categoria.nome} className="mb-12">
+            <div className="flex items-center gap-4 mb-6">
+              <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${getCategoriaColor(categoria.nome)} shadow-lg`}>
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className={`text-3xl font-bold ${getCategoriaTextColor(categoria.nome)}`}>
                   Categoria {categoria.nome}
                 </h2>
-                <p className="text-gray-600 mb-4">{categoria.descricao}</p>
-                <div className="text-sm text-gray-500">
-                  {categoria.pontosMax 
-                    ? `${categoria.pontosMin} - ${categoria.pontosMax} pontos`
-                    : `${categoria.pontosMin}+ pontos`
-                  }
-                </div>
-                <div className="mt-4 text-primary-600 font-medium group-hover:text-primary-700 inline-flex items-center gap-2">
-                  Ver ranking completo
-                  <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                <p className="text-gray-600">{categoria.descricao} · {categoria.pontosMax 
+                  ? `${categoria.pontosMin} - ${categoria.pontosMax} pontos`
+                  : `${categoria.pontosMin}+ pontos`
+                }</p>
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Masculino */}
+              <Link
+                href={`/ranking/${categoria.nome.toLowerCase()}/masculino`}
+                className="group"
+              >
+                <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-8 hover:shadow-2xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                        Masculino
+                      </h3>
+                      <p className="text-gray-600">Ranking masculino</p>
+                    </div>
+                    <div className="text-4xl">👨</div>
+                  </div>
+                  <div className="text-primary-600 font-bold group-hover:text-primary-700 inline-flex items-center gap-2 mt-4">
+                    Ver ranking completo
+                    <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Feminino */}
+              <Link
+                href={`/ranking/${categoria.nome.toLowerCase()}/feminino`}
+                className="group"
+              >
+                <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 p-8 hover:shadow-2xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                        Feminino
+                      </h3>
+                      <p className="text-gray-600">Ranking feminino</p>
+                    </div>
+                    <div className="text-4xl">👩</div>
+                  </div>
+                  <div className="text-primary-600 font-bold group-hover:text-primary-700 inline-flex items-center gap-2 mt-4">
+                    Ver ranking completo
+                    <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+        ))}
 
         {/* Info Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mt-12">
           <h3 className="text-xl font-bold text-gray-900 mb-4">
             Como funciona a pontuação?
           </h3>
@@ -97,6 +141,9 @@ export default function RankingsPage() {
             </p>
             <p>
               • A mudança de categoria é automática ao atingir a pontuação necessária
+            </p>
+            <p>
+              • Rankings separados por gênero (Masculino e Feminino)
             </p>
           </div>
           <div className="mt-6">

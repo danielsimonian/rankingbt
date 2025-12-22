@@ -1,15 +1,14 @@
 'use client';
 
-import { Jogador, Categoria } from '@/data/rankings';
+import { Jogador } from '@/types/database';
 import { Trophy, Medal, Award } from 'lucide-react';
 
 interface RankingTableProps {
   jogadores: Jogador[];
-  categoria?: Categoria;
   showCategoria?: boolean;
 }
 
-export default function RankingTable({ jogadores, categoria, showCategoria = false }: RankingTableProps) {
+export default function RankingTable({ jogadores, showCategoria = false }: RankingTableProps) {
   const getPosicaoIcon = (posicao: number) => {
     if (posicao === 1) return <Trophy className="w-5 h-5 text-yellow-500" />;
     if (posicao === 2) return <Medal className="w-5 h-5 text-gray-400" />;
@@ -17,15 +16,15 @@ export default function RankingTable({ jogadores, categoria, showCategoria = fal
     return null;
   };
 
-  const getCategoriaColor = (cat: Categoria) => {
-    const colors = {
+  const getCategoriaColor = (cat: string) => {
+    const colors: Record<string, string> = {
       'A': 'bg-red-100 text-red-700',
       'B': 'bg-orange-100 text-orange-700',
       'C': 'bg-yellow-100 text-yellow-700',
       'D': 'bg-green-100 text-green-700',
       'FUN': 'bg-blue-100 text-blue-700',
     };
-    return colors[cat];
+    return colors[cat] || 'bg-gray-100 text-gray-700';
   };
 
   if (jogadores.length === 0) {
@@ -73,6 +72,9 @@ export default function RankingTable({ jogadores, categoria, showCategoria = fal
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">{jogador.nome}</div>
+                {jogador.cidade && (
+                  <div className="text-xs text-gray-500">{jogador.cidade}</div>
+                )}
               </td>
               {showCategoria && (
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -85,7 +87,7 @@ export default function RankingTable({ jogadores, categoria, showCategoria = fal
                 <div className="text-sm font-bold text-primary-600">{jogador.pontos}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">{jogador.torneiosDispputados}</div>
+                <div className="text-sm text-gray-500">{jogador.torneios_disputados}</div>
               </td>
             </tr>
           ))}

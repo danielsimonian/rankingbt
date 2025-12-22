@@ -1,12 +1,16 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Download } from 'lucide-react';
-import { Categoria, getJogadoresPorCategoria } from '@/data/rankings';
+import { getJogadoresPorCategoriaEGenero, calcularPosicoes } from '@/lib/api';
+import { Categoria, Genero } from '@/types/database';
 import RankingTable from '@/components/RankingTable';
 
-const categorias: Categoria[] = ['A', 'B', 'C', 'D', 'FUN'];
+export const revalidate = 60;
 
-const categoriaNomes = {
+const categorias: Categoria[] = ['A', 'B', 'C', 'D', 'FUN'];
+const generos: Genero[] = ['Masculino', 'Feminino'];
+
+const categoriaNomes: Record<string, Categoria> = {
   'a': 'A',
   'b': 'B',
   'c': 'C',
@@ -14,7 +18,12 @@ const categoriaNomes = {
   'fun': 'FUN',
 };
 
-const categoriaDescricoes = {
+const generoNomes: Record<string, Genero> = {
+  'masculino': 'Masculino',
+  'feminino': 'Feminino',
+};
+
+const categoriaDescricoes: Record<Categoria, { nome: string; pontos: string }> = {
   'A': { nome: 'Elite', pontos: '1000+ pontos' },
   'B': { nome: 'Avançado', pontos: '601-1000 pontos' },
   'C': { nome: 'Intermediário', pontos: '301-600 pontos' },
@@ -23,25 +32,39 @@ const categoriaDescricoes = {
 };
 
 export async function generateStaticParams() {
-  return categorias.map((cat) => ({
-    categoria: cat.toLowerCase(),
-  }));
+  const params = [];
+  for (const cat of categorias) {
+    for (const gen of generos) {
+      params.push({
+        categoria: cat.toLowerCase(),
+        genero: gen.toLowerCase(),
+      });
+    }
+  }
+  return params;
 }
 
-export default function CategoriaRankingPage({ 
+export default async function CategoriaGeneroRankingPage({ 
   params 
 }: { 
-  params: { categoria: string } 
+  params: { categoria: string; genero: string } 
 }) {
-  const categoriaKey = params.categoria.toLowerCase() as keyof typeof categoriaNomes;
-  const categoria = categoriaNomes[categoriaKey] as Categoria;
+  const categoriaKey = params.categoria.toLowerCase();
+  const generoKey = params.genero.toLowerCase();
+  
+  const categoria = categoriaNomes[categoriaKey];
+  const genero = generoNomes[generoKey];
 
-  if (!categoria || !categorias.includes(categoria)) {
+  if (!categoria || !categorias.includes(categoria) || !genero || !generos.includes(genero)) {
     notFound();
   }
 
-  const jogadores = getJogadoresPorCategoria(categoria);
+  const jogadoresRaw = await getJogadoresPorCategoriaEGenero(categoria, genero);
+  const jogadores = calcularPosicoes(jogadoresRaw);
   const info = categoriaDescricoes[categoria];
+
+  const generoEmoji = genero === 'Masculino' ? '👨' : '👩';
+  const generoLabel = genero === 'Masculino' ? 'Masculino' : 'Feminino';
 
   return (
     <div className="bg-gray-50 min-h-screen py-12">
@@ -59,10 +82,13 @@ export default function CategoriaRankingPage({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Categoria {categoria}
-              </h1>
-              <p className="text-lg text-gray-600 mb-1">{info.nome}</p>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-gray-900">
+                  Categoria {categoria}
+                </h1>
+                <span className="text-4xl">{generoEmoji}</span>
+              </div>
+              <p className="text-lg text-gray-600 mb-1">{info.nome} · {generoLabel}</p>
               <p className="text-sm text-gray-500">{info.pontos}</p>
             </div>
             <div className="mt-6 md:mt-0">
@@ -70,6 +96,35 @@ export default function CategoriaRankingPage({
                 <Download className="w-5 h-5" />
                 Exportar PDF
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Switch Gênero */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-8">
+          <div className="flex items-center justify-center gap-4">
+            <span className="text-sm font-medium text-gray-600">Filtrar por:</span>
+            <div className="flex gap-2">
+              <Link
+                href={`/ranking/${params.categoria}/masculino`}
+                className={`px-6 py-2 rounded-lg font-bold transition-all ${
+                  genero === 'Masculino'
+                    ? 'bg-primary-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                👨 Masculino
+              </Link>
+              <Link
+                href={`/ranking/${params.categoria}/feminino`}
+                className={`px-6 py-2 rounded-lg font-bold transition-all ${
+                  genero === 'Feminino'
+                    ? 'bg-primary-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                👩 Feminino
+              </Link>
             </div>
           </div>
         </div>
@@ -97,10 +152,10 @@ export default function CategoriaRankingPage({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <h2 className="font-semibold text-gray-900">
-              Ranking Completo - Categoria {categoria}
+              Ranking Completo - Categoria {categoria} {generoEmoji} {generoLabel}
             </h2>
           </div>
-          <RankingTable jogadores={jogadores} categoria={categoria} />
+          <RankingTable jogadores={jogadores} />
         </div>
 
         {/* Info */}

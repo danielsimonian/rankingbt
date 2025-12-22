@@ -1,9 +1,14 @@
 import Link from 'next/link';
 import { Trophy, TrendingUp, Users, Calendar, Award, ArrowRight, Sparkles, Target, Zap } from 'lucide-react';
 import PlayerSearch from '@/components/PlayerSearch';
-import { jogadores, torneios, calcularPosicoes } from '@/data/rankings';
+import { getJogadores, getTorneios, calcularPosicoes } from '@/lib/api';
 
-export default function Home() {
+export const revalidate = 60; // Revalidar a cada 60 segundos
+
+export default async function Home() {
+  const jogadores = await getJogadores();
+  const torneios = await getTorneios();
+  
   const top5Geral = calcularPosicoes(jogadores).slice(0, 5);
   const proximosTorneios = torneios
     .filter(t => t.status === 'confirmado')
@@ -238,7 +243,8 @@ export default function Home() {
                           }`}>
                             CATEGORIA {jogador.categoria}
                           </span>
-                          <span className="text-sm text-gray-600 font-semibold">{jogador.torneiosDispputados} torneios</span>
+                          <span className="text-xs font-bold text-gray-500 uppercase">{jogador.genero}</span>
+                          <span className="text-sm text-gray-600 font-semibold">{jogador.torneios_disputados} torneios</span>
                         </div>
                       </div>
                     </div>
