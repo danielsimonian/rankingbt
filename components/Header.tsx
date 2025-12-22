@@ -1,0 +1,107 @@
+'use client';
+
+import Link from 'next/link';
+import { Trophy, Menu, X } from 'lucide-react';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+
+export default function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
+  return (
+    <header className={`bg-white/98 backdrop-blur-md shadow-lg border-b-2 border-primary-100/50 ${isHomePage ? '' : 'sticky top-0'} z-50`}>
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-20 justify-between items-center">
+          {/* Premium Logo */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-xl shadow-primary-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+              <Trophy className="w-7 h-7 text-white drop-shadow-lg" />
+            </div>
+            <div className="hidden sm:block">
+              <span className="font-black text-xl bg-gradient-to-r from-primary-600 via-primary-500 to-royal-600 bg-clip-text text-transparent">
+                Ranking BT
+              </span>
+              <div className="text-xs text-gray-600 font-bold -mt-1 tracking-wide">BAIXADA SANTISTA</div>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link 
+              href="/rankings" 
+              className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
+            >
+              <span className="relative z-10">Rankings</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+            </Link>
+            <Link 
+              href="/como-funciona" 
+              className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
+            >
+              <span className="relative z-10">Como Funciona</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+            </Link>
+            <Link 
+              href="/torneios" 
+              className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
+            >
+              <span className="relative z-10">Torneios</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+            </Link>
+            <Link 
+              href="/cadastro" 
+              className="ml-3 relative group bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-7 py-3 rounded-xl hover:from-primary-400 hover:to-primary-500 font-black transition-all hover:scale-105 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+              <span className="relative z-10">Cadastrar</span>
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2.5 text-gray-700 hover:bg-primary-50 rounded-xl transition-colors"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden py-4 space-y-2 border-t border-primary-100 mt-2">
+            <Link 
+              href="/rankings" 
+              className="block text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-bold py-3 px-4 rounded-xl transition-all"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Rankings
+            </Link>
+            <Link 
+              href="/como-funciona" 
+              className="block text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-bold py-3 px-4 rounded-xl transition-all"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Como Funciona
+            </Link>
+            <Link 
+              href="/torneios" 
+              className="block text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-bold py-3 px-4 rounded-xl transition-all"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Torneios
+            </Link>
+            <Link 
+              href="/cadastro" 
+              className="block bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-6 py-3 rounded-xl hover:from-primary-600 hover:to-primary-700 font-black text-center transition-all shadow-lg"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Cadastrar
+            </Link>
+          </div>
+        )}
+      </nav>
+    </header>
+  );
+}
