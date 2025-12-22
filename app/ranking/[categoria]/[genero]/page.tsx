@@ -23,12 +23,12 @@ const generoNomes: Record<string, Genero> = {
   'feminino': 'Feminino',
 };
 
-const categoriaDescricoes: Record<Categoria, { nome: string; pontos: string }> = {
-  'A': { nome: 'Elite', pontos: '1000+ pontos' },
-  'B': { nome: 'Avançado', pontos: '601-1000 pontos' },
-  'C': { nome: 'Intermediário', pontos: '301-600 pontos' },
-  'D': { nome: 'Iniciante', pontos: '101-300 pontos' },
-  'FUN': { nome: 'Recreativo', pontos: '0-100 pontos' },
+const categoriaDescricoes: Record<Categoria, { nome: string; descricao: string }> = {
+  'A': { nome: 'Elite', descricao: 'Nível Avançado' },
+  'B': { nome: 'Avançado', descricao: 'Alto Nível Técnico' },
+  'C': { nome: 'Intermediário', descricao: 'Em Desenvolvimento' },
+  'D': { nome: 'Iniciante', descricao: 'Aprendizado' },
+  'FUN': { nome: 'Recreativo', descricao: 'Diversão' },
 };
 
 export async function generateStaticParams() {
@@ -89,7 +89,7 @@ export default async function CategoriaGeneroRankingPage({
                 <span className="text-4xl">{generoEmoji}</span>
               </div>
               <p className="text-lg text-gray-600 mb-1">{info.nome} · {generoLabel}</p>
-              <p className="text-sm text-gray-500">{info.pontos}</p>
+              <p className="text-sm text-gray-500">{info.descricao}</p>
             </div>
             <div className="mt-6 md:mt-0">
               <button className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium">
@@ -164,8 +164,8 @@ export default async function CategoriaGeneroRankingPage({
             ℹ️ Informação
           </h3>
           <p className="text-blue-800 text-sm">
-            O ranking é atualizado após cada torneio homologado. Para mudar de categoria, 
-            é necessário atingir a pontuação mínima e mantê-la por pelo menos 3 torneios consecutivos.
+            O ranking é atualizado após cada torneio homologado. A pontuação é baseada nos <strong>10 melhores resultados</strong> dos últimos 12 meses. 
+            Jogadores podem subir de categoria quando quiserem (pontuação zera), mas para descer é necessário aprovação do administrador.
           </p>
         </div>
       </div>

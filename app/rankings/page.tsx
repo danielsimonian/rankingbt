@@ -2,19 +2,16 @@ import Link from 'next/link';
 import { Trophy } from 'lucide-react';
 
 type Categoria = 'A' | 'B' | 'C' | 'D' | 'FUN';
-type Genero = 'Masculino' | 'Feminino';
 
 const categorias: { 
   nome: Categoria; 
   descricao: string; 
-  pontosMin: number; 
-  pontosMax: number | null;
 }[] = [
-  { nome: 'A', descricao: 'Elite', pontosMin: 1000, pontosMax: null },
-  { nome: 'B', descricao: 'Avançado', pontosMin: 601, pontosMax: 1000 },
-  { nome: 'C', descricao: 'Intermediário', pontosMin: 301, pontosMax: 600 },
-  { nome: 'D', descricao: 'Iniciante', pontosMin: 101, pontosMax: 300 },
-  { nome: 'FUN', descricao: 'Recreativo', pontosMin: 0, pontosMax: 100 },
+  { nome: 'A', descricao: 'Elite - Nível Avançado' },
+  { nome: 'B', descricao: 'Avançado - Alto Nível Técnico' },
+  { nome: 'C', descricao: 'Intermediário - Em Desenvolvimento' },
+  { nome: 'D', descricao: 'Iniciante - Aprendizado' },
+  { nome: 'FUN', descricao: 'Recreativo - Diversão' },
 ];
 
 const getCategoriaColor = (cat: Categoria) => {
@@ -50,7 +47,7 @@ export default function RankingsPage() {
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Selecione uma categoria e gênero para visualizar o ranking completo. 
-            Os jogadores são classificados de acordo com sua pontuação acumulada nos últimos 12 meses.
+            A pontuação é calculada com base nos <strong>10 melhores resultados</strong> dos últimos 12 meses.
           </p>
         </div>
 
@@ -65,10 +62,7 @@ export default function RankingsPage() {
                 <h2 className={`text-3xl font-bold ${getCategoriaTextColor(categoria.nome)}`}>
                   Categoria {categoria.nome}
                 </h2>
-                <p className="text-gray-600">{categoria.descricao} · {categoria.pontosMax 
-                  ? `${categoria.pontosMin} - ${categoria.pontosMax} pontos`
-                  : `${categoria.pontosMin}+ pontos`
-                }</p>
+                <p className="text-gray-600">{categoria.descricao}</p>
               </div>
             </div>
 
@@ -131,19 +125,19 @@ export default function RankingsPage() {
           </h3>
           <div className="space-y-3 text-gray-600">
             <p>
-              • A pontuação é acumulada com base nos resultados nos torneios homologados
+              • <strong>Sistema Top 10 (Padrão ITF):</strong> São computados os 10 melhores resultados do atleta no período de 12 meses
             </p>
             <p>
-              • São considerados os últimos 12 meses de competições
+              • <strong>Pontuação por colocação:</strong> Campeão (100pts), Vice (75pts), 3º lugar (50pts), Quartas (25pts), Oitavas (10pts), Participação (5pts)
             </p>
             <p>
-              • É necessário disputar no mínimo 3 torneios para aparecer no ranking
+              • <strong>Escolha da categoria:</strong> O jogador escolhe em qual categoria deseja competir
             </p>
             <p>
-              • A mudança de categoria é automática ao atingir a pontuação necessária
+              • <strong>Mudança de categoria:</strong> Pode subir quando quiser (pontuação zera). Para descer, precisa solicitar aprovação do admin
             </p>
             <p>
-              • Rankings separados por gênero (Masculino e Feminino)
+              • <strong>Rankings separados:</strong> Por categoria e gênero (Masculino e Feminino)
             </p>
           </div>
           <div className="mt-6">
