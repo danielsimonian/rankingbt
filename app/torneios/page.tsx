@@ -1,6 +1,8 @@
 import { Calendar, MapPin, CheckCircle, Clock, Play } from 'lucide-react';
 import { torneios } from '@/data/rankings';
 
+export const dynamic = 'force-dynamic'; // Força sem cache
+
 const statusConfig = {
   confirmado: {
     label: 'Confirmado',
@@ -152,7 +154,7 @@ export default function TorneiosPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Torneios Realizados</h2>
           
-          
+
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-200">
             {torneiosRealizados.map((torneio) => {
               const config = statusConfig[torneio.status];
