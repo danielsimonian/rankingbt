@@ -51,7 +51,6 @@ export default function ImportarPage() {
 
   useEffect(() => {
   loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -407,7 +406,7 @@ Juliana Costa,Quartas de Final`;
                         <li>Baixe o template CSV clicando no botão abaixo</li>
                         <li>Preencha com os dados dos jogadores</li>
                         <li>Faça upload do arquivo OU cole o conteúdo na caixa de texto</li>
-                        <li>Confira o preview e clique em "Importar"</li>
+                        <li>Confira o preview e clique em &quot;Importar&quot;</li>
                       </ol>
                       <div className="bg-white border border-blue-200 rounded p-3 font-mono text-xs mb-2">
                         <div className="font-bold text-blue-800 mb-1">Exemplo de formato correto:</div>
@@ -459,7 +458,7 @@ Juliana Costa,Quartas de Final`;
                   <textarea
                     value={jogadoresTexto}
                     onChange={(e) => setJogadoresTexto(e.target.value)}
-                    placeholder='Cole aqui os dados dos jogadores no formato CSV...'
+                    placeholder="Cole aqui os dados dos jogadores no formato CSV..."
                     className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
                   />
                   <button
@@ -563,7 +562,7 @@ Juliana Costa,Quartas de Final`;
                         <li>Selecione o torneio abaixo</li>
                         <li>Baixe o template CSV ou cole os dados</li>
                         <li>Use o formato: nome_jogador,colocacao</li>
-                        <li>Confira o preview e clique em "Importar"</li>
+                        <li>Confira o preview e clique em &quot;Importar&quot;</li>
                       </ol>
                       <div className="bg-white border border-blue-200 rounded p-3 font-mono text-xs mb-2">
                         <div className="font-bold text-blue-800 mb-1">Exemplo de formato correto:</div>
@@ -625,7 +624,7 @@ Juliana Costa,Quartas de Final`;
                       <textarea
                         value={resultadosTexto}
                         onChange={(e) => setResultadosTexto(e.target.value)}
-                        placeholder='Cole aqui os resultados no formato CSV...'
+                        placeholder="Cole aqui os resultados no formato CSV..."
                         className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
                       />
                       <button
