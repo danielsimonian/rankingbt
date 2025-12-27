@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Edit2, Trash2, CheckCircle, XCircle, Trophy } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Trophy } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { verificarAdmin } from '@/lib/auth';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
@@ -18,7 +18,6 @@ interface Configuracao {
   quartas: number;
   oitavas: number;
   participacao: number;
-  ativo: boolean;
 }
 
 export default function ConfiguracoesPage() {
@@ -36,7 +35,6 @@ export default function ConfiguracoesPage() {
     quartas: 25,
     oitavas: 10,
     participacao: 5,
-    ativo: false,
   });
 
   const router = useRouter();
@@ -56,7 +54,6 @@ export default function ConfiguracoesPage() {
     const { data } = await supabase
       .from('config_pontuacao')
       .select('*')
-      .order('ativo', { ascending: false })
       .order('nome', { ascending: true });
 
     if (data) {
@@ -112,7 +109,6 @@ export default function ConfiguracoesPage() {
       quartas: config.quartas,
       oitavas: config.oitavas,
       participacao: config.participacao,
-      ativo: config.ativo,
     });
     setEditingId(config.id);
     setShowForm(true);
@@ -135,29 +131,6 @@ export default function ConfiguracoesPage() {
     }
   };
 
-  const handleToggleAtivo = async (id: string, ativoAtual: boolean) => {
-    try {
-      // Se vai ativar, desativa todas as outras primeiro
-      if (!ativoAtual) {
-        await supabase
-          .from('config_pontuacao')
-          .update({ ativo: false })
-          .neq('id', id);
-      }
-
-      // Atualiza a configuração
-      const { error } = await supabase
-        .from('config_pontuacao')
-        .update({ ativo: !ativoAtual })
-        .eq('id', id);
-
-      if (error) throw error;
-      loadData();
-    } catch (error: any) {
-      alert(`Erro: ${error.message}`);
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       nome: '',
@@ -168,7 +141,6 @@ export default function ConfiguracoesPage() {
       quartas: 25,
       oitavas: 10,
       participacao: 5,
-      ativo: false,
     });
     setEditingId(null);
     setShowForm(false);
@@ -243,7 +215,7 @@ export default function ConfiguracoesPage() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">Use nomes descritivos como "BT 1000", "Liga Premium", etc</p>
+                    <p className="text-xs text-gray-500 mt-1">Use nomes descritivos como BT 1000, Liga Premium, etc</p>
                   </div>
 
                   {/* Descrição */}
@@ -349,20 +321,6 @@ export default function ConfiguracoesPage() {
                   </div>
                 </div>
 
-                {/* Ativa */}
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="ativo"
-                    checked={formData.ativo}
-                    onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                  />
-                  <label htmlFor="ativo" className="text-sm font-medium text-gray-700">
-                    Marcar como ativa (apenas uma configuração pode estar ativa por vez)
-                  </label>
-                </div>
-
                 {/* Botões */}
                 <div className="flex justify-end gap-3">
                   <button
@@ -406,11 +364,7 @@ export default function ConfiguracoesPage() {
               configuracoes.map((config) => (
                 <div
                   key={config.id}
-                  className={`bg-white rounded-xl shadow-sm border-2 p-6 transition-all ${
-                    config.ativo
-                      ? 'border-primary-300 bg-gradient-to-r from-primary-50 to-transparent'
-                      : 'border-gray-200'
-                  }`}
+                  className="bg-white rounded-xl shadow-sm border-2 border-gray-200 p-6 transition-all hover:border-primary-200"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -418,12 +372,6 @@ export default function ConfiguracoesPage() {
                         <h3 className="text-2xl font-black text-gray-900">
                           {config.nome}
                         </h3>
-                        {config.ativo && (
-                          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" />
-                            ATIVA
-                          </span>
-                        )}
                       </div>
                       {config.descricao && (
                         <p className="text-sm text-gray-600 mb-4">{config.descricao}</p>
@@ -459,29 +407,12 @@ export default function ConfiguracoesPage() {
                         <Edit2 className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => handleToggleAtivo(config.id, config.ativo)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          config.ativo
-                            ? 'text-red-600 hover:bg-red-50'
-                            : 'text-green-600 hover:bg-green-50'
-                        }`}
-                        title={config.ativo ? 'Desativar' : 'Ativar'}
+                        onClick={() => handleDelete(config.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Excluir"
                       >
-                        {config.ativo ? (
-                          <XCircle className="w-5 h-5" />
-                        ) : (
-                          <CheckCircle className="w-5 h-5" />
-                        )}
+                        <Trash2 className="w-5 h-5" />
                       </button>
-                      {!config.ativo && (
-                        <button
-                          onClick={() => handleDelete(config.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>

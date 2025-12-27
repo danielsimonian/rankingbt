@@ -60,7 +60,6 @@ export interface ConfiguracaoPontuacao {
   quartas: number;
   oitavas: number;
   participacao: number;
-  ativo: boolean;
   created_at?: string;
 }
 
