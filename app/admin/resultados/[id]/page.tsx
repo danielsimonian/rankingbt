@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, Save, Trash2, Trophy, Calendar, MapPin,
-  User, Award, Loader2, CheckCircle
+  User, Award, Loader2, CheckCircle, Edit2, X
 } from 'lucide-react';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { getJogadores } from '@/lib/api';
-import { getConfigPontuacaoAtiva, calcularPontosPorColocacao } from '@/lib/pontuacao';
+import { getConfigPontuacaoAtiva } from '@/lib/pontuacao';
 import { Torneio, Jogador, Categoria, ConfiguracaoPontuacao } from '@/types/database';
+
 interface ResultadoForm {
   id: string;
   jogador_id: string;
@@ -22,6 +23,20 @@ interface ResultadoForm {
   pontos_ganhos: number;
 }
 
+interface ResultadoExistente {
+  id: string;
+  jogador_id: string;
+  colocacao: string;
+  pontos_ganhos: number;
+  categoria_jogada: Categoria;
+  jogadores: {
+    nome: string;
+    categoria: Categoria;
+    pontos: number;
+    torneios_disputados: number;
+  };
+}
+
 export default function RegistrarResultadosPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,11 +44,14 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
   const [jogadores, setJogadores] = useState<Jogador[]>([]);
   const [configPontuacao, setConfigPontuacao] = useState<ConfiguracaoPontuacao | null>(null);
   const [resultados, setResultados] = useState<ResultadoForm[]>([]);
-  const [resultadosExistentes, setResultadosExistentes] = useState<any[]>([]);
+  const [resultadosExistentes, setResultadosExistentes] = useState<ResultadoExistente[]>([]);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [editandoColocacao, setEditandoColocacao] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -67,7 +85,7 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
       .from('resultados')
       .select(`
         *,
-        jogadores:jogador_id (nome, categoria)
+        jogadores:jogador_id (nome, categoria, pontos, torneios_disputados)
       `)
       .eq('torneio_id', params.id);
 
@@ -75,9 +93,29 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
     setConfigPontuacao(config);
     setJogadores(jogadoresData);
     setResultadosExistentes(resultadosData || []);
-    setResultados([]); // Sempre começar com formulário vazio
+    setResultados([]);
     setLoading(false);
   };
+
+  const calcularPontos = (colocacao: string): number => {
+    const pontuacao = torneio?.pontuacao_custom || configPontuacao;
+    
+    if (!pontuacao) return 0;
+
+    const mapa: Record<string, keyof typeof pontuacao> = {
+      'Campeão': 'campeao',
+      'Vice': 'vice',
+      '3º Lugar': 'terceiro',
+      'Quartas de Final': 'quartas',
+      'Oitavas de Final': 'oitavas',
+      'Participação': 'participacao',
+    };
+    
+    const chave = mapa[colocacao];
+    return chave ? (pontuacao[chave] as number) : 0;
+  };
+
+  // ==================== NOVOS RESULTADOS ====================
 
   const adicionarResultado = () => {
     const novoId = `temp-${Date.now()}`;
@@ -100,7 +138,6 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
       if (r.id === id) {
         const updated = { ...r, [field]: value };
 
-        // Se mudou jogador, atualizar nome e categoria
         if (field === 'jogador_id') {
           const jogador = jogadores.find(j => j.id === value);
           if (jogador) {
@@ -109,28 +146,11 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
           }
         }
 
-// Recalcular pontos se mudou colocação ou jogador
-if (field === 'colocacao' || field === 'jogador_id') {
-  if (updated.colocacao && torneio) {
-    // ✅ USA PONTUAÇÃO DO TORNEIO (pontuacao_custom)
-    const pontuacao = torneio.pontuacao_custom || configPontuacao;
-    
-    if (pontuacao) {
-      // Mapear colocação para pontos
-      const mapa: Record<string, keyof typeof pontuacao> = {
-        'Campeão': 'campeao',
-        'Vice': 'vice',
-        '3º Lugar': 'terceiro',
-        'Quartas de Final': 'quartas',
-        'Oitavas de Final': 'oitavas',
-        'Participação': 'participacao',
-      };
-      
-      const chave = mapa[updated.colocacao];
-      updated.pontos_ganhos = chave ? pontuacao[chave] : 0;
-    }
-  }
-}
+        if (field === 'colocacao' || field === 'jogador_id') {
+          if (updated.colocacao) {
+            updated.pontos_ganhos = calcularPontos(updated.colocacao);
+          }
+        }
 
         return updated;
       }
@@ -139,7 +159,6 @@ if (field === 'colocacao' || field === 'jogador_id') {
   };
 
   const handleSalvar = async () => {
-    // Validar
     const resultadosValidos = resultados.filter(r => r.jogador_id && r.colocacao);
     
     if (resultadosValidos.length === 0) {
@@ -147,7 +166,6 @@ if (field === 'colocacao' || field === 'jogador_id') {
       return;
     }
 
-    // Verificar duplicatas
     const jogadoresUnicos = new Set(resultadosValidos.map(r => r.jogador_id));
     if (jogadoresUnicos.size !== resultadosValidos.length) {
       alert('Não pode haver jogadores duplicados!');
@@ -157,7 +175,6 @@ if (field === 'colocacao' || field === 'jogador_id') {
     setSaving(true);
 
     try {
-      // Preparar dados para inserir
       const resultadosParaInserir = resultadosValidos.map(r => ({
         torneio_id: params.id,
         jogador_id: r.jogador_id,
@@ -166,16 +183,12 @@ if (field === 'colocacao' || field === 'jogador_id') {
         categoria_jogada: r.categoria,
       }));
 
-      // Inserir resultados
       const { error: insertError } = await supabase
         .from('resultados')
         .insert(resultadosParaInserir);
 
-      if (insertError) {
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
-      // Atualizar pontos e torneios_disputados dos jogadores
       for (const resultado of resultadosValidos) {
         const jogador = jogadores.find(j => j.id === resultado.jogador_id);
         if (jogador) {
@@ -189,7 +202,6 @@ if (field === 'colocacao' || field === 'jogador_id') {
         }
       }
 
-      // Atualizar status do torneio para "realizado" se ainda não estiver
       if (torneio?.status !== 'realizado') {
         await supabase
           .from('torneios')
@@ -197,9 +209,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
           .eq('id', params.id);
       }
 
-      alert(`${resultadosValidos.length} resultado(s) registrado(s) com sucesso!\n\nRanking atualizado!`);
-      
-      // Limpar formulário e recarregar
+      alert(`${resultadosValidos.length} resultado(s) registrado(s) com sucesso!`);
       setSaving(false);
       await loadData();
       
@@ -209,7 +219,97 @@ if (field === 'colocacao' || field === 'jogador_id') {
     }
   };
 
-  // Filtrar jogadores já adicionados
+  // ==================== EDITAR RESULTADO ====================
+
+  const iniciarEdicao = (resultado: ResultadoExistente) => {
+    setEditandoId(resultado.id);
+    setEditandoColocacao(resultado.colocacao);
+  };
+
+  const cancelarEdicao = () => {
+    setEditandoId(null);
+    setEditandoColocacao('');
+  };
+
+  const salvarEdicao = async (resultado: ResultadoExistente) => {
+    if (!editandoColocacao) return;
+
+    setSaving(true);
+
+    try {
+      const novaPontuacao = calcularPontos(editandoColocacao);
+      const diferencaPontos = novaPontuacao - resultado.pontos_ganhos;
+
+      // Atualizar resultado
+      const { error: updateError } = await supabase
+        .from('resultados')
+        .update({
+          colocacao: editandoColocacao,
+          pontos_ganhos: novaPontuacao,
+        })
+        .eq('id', resultado.id);
+
+      if (updateError) throw updateError;
+
+      // Atualizar pontos do jogador
+      await supabase
+        .from('jogadores')
+        .update({
+          pontos: resultado.jogadores.pontos + diferencaPontos,
+        })
+        .eq('id', resultado.jogador_id);
+
+      alert('Resultado atualizado com sucesso!');
+      setEditandoId(null);
+      setEditandoColocacao('');
+      setSaving(false);
+      await loadData();
+
+    } catch (error: any) {
+      alert(`Erro ao editar: ${error.message}`);
+      setSaving(false);
+    }
+  };
+
+  // ==================== EXCLUIR RESULTADO ====================
+
+  const excluirResultado = async (resultado: ResultadoExistente) => {
+    if (!confirm(`Tem certeza que deseja excluir o resultado de ${resultado.jogadores.nome}?`)) {
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Excluir resultado
+      const { error: deleteError } = await supabase
+        .from('resultados')
+        .delete()
+        .eq('id', resultado.id);
+
+      if (deleteError) throw deleteError;
+
+      // Atualizar jogador (diminuir pontos e torneios disputados)
+      await supabase
+        .from('jogadores')
+        .update({
+          pontos: resultado.jogadores.pontos - resultado.pontos_ganhos,
+          torneios_disputados: resultado.jogadores.torneios_disputados - 1,
+        })
+        .eq('id', resultado.jogador_id);
+
+      alert('Resultado excluído com sucesso!');
+      setSaving(false);
+      await loadData();
+
+    } catch (error: any) {
+      alert(`Erro ao excluir: ${error.message}`);
+      setSaving(false);
+    }
+  };
+
+  // ==================== RENDER ====================
+
   const getJogadoresDisponiveis = () => {
     const jogadoresAdicionados = new Set([
       ...resultados.map(r => r.jogador_id),
@@ -257,7 +357,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
                   <ArrowLeft className="w-5 h-5 text-gray-600" />
                 </Link>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Registrar Resultados</h1>
+                  <h1 className="text-xl font-bold text-gray-900">Gerenciar Resultados</h1>
                   <p className="text-xs text-gray-500">{torneio?.nome}</p>
                 </div>
               </div>
@@ -307,53 +407,134 @@ if (field === 'colocacao' || field === 'jogador_id') {
 
           {/* Resultados Existentes */}
           {resultadosExistentes.length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-8">
-              <div className="flex items-start gap-3 mb-4">
-                <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <h3 className="font-bold text-green-900 mb-2">
-                    Resultados já registrados ({resultadosExistentes.length})
-                  </h3>
-                  <p className="text-sm text-green-800 mb-3">
-                    Este torneio já possui resultados cadastrados. Você pode adicionar mais resultados abaixo.
-                  </p>
-                  <div className="space-y-2">
-                    {resultadosExistentes.map((r: any) => (
-                      <div key={r.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-gray-900">{r.jogadores?.nome}</span>
-                          <span className="text-gray-500">•</span>
-                          <span className={`font-bold text-sm ${
-                            r.jogadores?.categoria === 'A' ? 'text-red-600' :
-                            r.jogadores?.categoria === 'B' ? 'text-orange-600' :
-                            r.jogadores?.categoria === 'C' ? 'text-yellow-600' :
-                            r.jogadores?.categoria === 'D' ? 'text-green-600' :
-                            'text-blue-600'
-                          }`}>
-                            Cat. {r.jogadores?.categoria}
-                          </span>
-                          <span className="text-gray-500">•</span>
-                          <span className="text-gray-600">{r.colocacao}</span>
-                        </div>
-                        <span className="font-bold text-primary-600">{r.pontos_ganhos} pts</span>
-                      </div>
-                    ))}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                  <div>
+                    <h3 className="font-bold text-white">
+                      Resultados Cadastrados ({resultadosExistentes.length})
+                    </h3>
+                    <p className="text-sm text-green-100">
+                      Clique em Editar ✏️ para alterar ou Excluir 🗑️ para remover
+                    </p>
                   </div>
                 </div>
+              </div>
+
+              <div className="p-6 space-y-3">
+                {resultadosExistentes.map((r) => (
+                  <div key={r.id} className="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
+                    {editandoId === r.id ? (
+                      // MODO EDIÇÃO
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                          <div className="md:col-span-4">
+                            <div className="font-semibold text-gray-900">{r.jogadores.nome}</div>
+                            <div className="text-sm text-gray-500">Cat. {r.jogadores.categoria}</div>
+                          </div>
+
+                          <div className="md:col-span-4">
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">
+                              Nova Colocação
+                            </label>
+                            <select
+                              value={editandoColocacao}
+                              onChange={(e) => setEditandoColocacao(e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                            >
+                              {colocacoes.map(col => (
+                                <option key={col} value={col}>{col}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">
+                              Novos Pontos
+                            </label>
+                            <div className="px-3 py-2 bg-primary-50 border border-primary-200 rounded-lg text-center">
+                              <span className="font-bold text-primary-600">
+                                {calcularPontos(editandoColocacao)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="md:col-span-2 flex gap-2">
+                            <button
+                              onClick={() => salvarEdicao(r)}
+                              disabled={saving}
+                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm disabled:opacity-50"
+                            >
+                              {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : '✓'}
+                            </button>
+                            <button
+                              onClick={cancelarEdicao}
+                              disabled={saving}
+                              className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold text-sm"
+                            >
+                              <X className="w-4 h-4 mx-auto" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // MODO VISUALIZAÇÃO
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1">
+                          <span className="font-semibold text-gray-900">{r.jogadores.nome}</span>
+                          <span className="text-gray-400">•</span>
+                          <span className={`font-bold text-sm ${
+                            r.jogadores.categoria === 'A' ? 'text-red-600' :
+                            r.jogadores.categoria === 'B' ? 'text-orange-600' :
+                            r.jogadores.categoria === 'C' ? 'text-yellow-600' :
+                            r.jogadores.categoria === 'D' ? 'text-green-600' :
+                            'text-blue-600'
+                          }`}>
+                            Cat. {r.jogadores.categoria}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-gray-700">{r.colocacao}</span>
+                          <span className="text-gray-400">•</span>
+                          <span className="font-bold text-primary-600">{r.pontos_ganhos} pts</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => iniciarEdicao(r)}
+                            disabled={saving}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => excluirResultado(r)}
+                            disabled={saving}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Formulário de Resultados */}
+          {/* Formulário Novos Resultados */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
+                    <Plus className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white">Adicionar Resultados</h3>
+                    <h3 className="font-bold text-white">Adicionar Novos Resultados</h3>
                     <p className="text-sm text-primary-100">{resultados.length} novo(s) resultado(s)</p>
                   </div>
                 </div>
@@ -377,7 +558,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
                     Todos os jogadores já foram adicionados!
                   </h3>
                   <p className="text-gray-600">
-                    Não há mais jogadores disponíveis para adicionar neste torneio.
+                    Não há mais jogadores disponíveis. Use Editar ✏️ para modificar resultados.
                   </p>
                 </div>
               ) : resultados.length === 0 ? (
@@ -390,7 +571,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
                     className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
                   >
                     <Plus className="w-4 h-4" />
-                    Adicionar Primeiro Resultado
+                    Adicionar Resultado
                   </button>
                 </div>
               ) : (
@@ -398,14 +579,12 @@ if (field === 'colocacao' || field === 'jogador_id') {
                   {resultados.map((resultado, index) => (
                     <div key={resultado.id} className="bg-gray-50 rounded-lg border-2 border-gray-200 p-4">
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                        {/* Número */}
                         <div className="md:col-span-1">
                           <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold">{index + 1}</span>
                           </div>
                         </div>
 
-                        {/* Jogador */}
                         <div className="md:col-span-4">
                           <label className="block text-xs font-semibold text-gray-600 mb-1">
                             Jogador *
@@ -413,26 +592,23 @@ if (field === 'colocacao' || field === 'jogador_id') {
                           <select
                             value={resultado.jogador_id}
                             onChange={(e) => atualizarResultado(resultado.id, 'jogador_id', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
                             required
                           >
-                            <option value="">Selecione o jogador...</option>
-                            {/* Mostrar jogador atual se já foi selecionado */}
+                            <option value="">Selecione...</option>
                             {resultado.jogador_id && !jogadoresDisponiveis.find(j => j.id === resultado.jogador_id) && (
                               <option value={resultado.jogador_id}>
                                 {resultado.jogador_nome} - Cat. {resultado.categoria}
                               </option>
                             )}
-                            {/* Mostrar apenas jogadores disponíveis */}
                             {jogadoresDisponiveis.map(jogador => (
                               <option key={jogador.id} value={jogador.id}>
-                                {jogador.nome} - Cat. {jogador.categoria} ({jogador.genero})
+                                {jogador.nome} - Cat. {jogador.categoria}
                               </option>
                             ))}
                           </select>
                         </div>
 
-                        {/* Categoria (exibição) */}
                         <div className="md:col-span-1">
                           <label className="block text-xs font-semibold text-gray-600 mb-1">
                             Cat.
@@ -450,7 +626,6 @@ if (field === 'colocacao' || field === 'jogador_id') {
                           </div>
                         </div>
 
-                        {/* Colocação */}
                         <div className="md:col-span-3">
                           <label className="block text-xs font-semibold text-gray-600 mb-1">
                             Colocação *
@@ -458,7 +633,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
                           <select
                             value={resultado.colocacao}
                             onChange={(e) => atualizarResultado(resultado.id, 'colocacao', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-sm"
                             required
                           >
                             {colocacoes.map(col => (
@@ -467,7 +642,6 @@ if (field === 'colocacao' || field === 'jogador_id') {
                           </select>
                         </div>
 
-                        {/* Pontos */}
                         <div className="md:col-span-2">
                           <label className="block text-xs font-semibold text-gray-600 mb-1">
                             Pontos
@@ -477,42 +651,16 @@ if (field === 'colocacao' || field === 'jogador_id') {
                           </div>
                         </div>
 
-                        {/* Remover */}
                         <div className="md:col-span-1">
                           <button
                             type="button"
                             onClick={() => removerResultado(resultado.id)}
-                            className="w-full md:w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                            title="Remover"
+                            className="w-full h-10 flex items-center justify-center bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
-
-                      {/* Resumo do Resultado */}
-                      {resultado.jogador_id && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="font-semibold">{resultado.jogador_nome}</span>
-                            <span className="text-gray-400">•</span>
-                            <span className={`font-bold ${
-                              resultado.categoria === 'A' ? 'text-red-600' :
-                              resultado.categoria === 'B' ? 'text-orange-600' :
-                              resultado.categoria === 'C' ? 'text-yellow-600' :
-                              resultado.categoria === 'D' ? 'text-green-600' :
-                              'text-blue-600'
-                            }`}>
-                              Categoria {resultado.categoria}
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span>{resultado.colocacao}</span>
-                            <span className="text-gray-400">•</span>
-                            <span className="font-bold text-primary-600">{resultado.pontos_ganhos} pontos</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -520,7 +668,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
             </div>
           </div>
 
-          {/* Ações */}
+          {/* Botões */}
           {resultados.length > 0 && (
             <div className="flex items-center justify-end gap-3">
               <Link
@@ -532,7 +680,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
               <button
                 onClick={handleSalvar}
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
               >
                 {saving ? (
                   <>
@@ -542,7 +690,7 @@ if (field === 'colocacao' || field === 'jogador_id') {
                 ) : (
                   <>
                     <Save className="w-5 h-5" />
-                    Salvar Resultados ({resultados.length})
+                    Salvar Novos Resultados ({resultados.length})
                   </>
                 )}
               </button>
