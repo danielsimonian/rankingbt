@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { 
   Trophy, Users, Calendar, AlertCircle, LogOut, 
   TrendingUp, Award, Settings, FileText, ChevronRight,
-  BarChart3
+  BarChart3, Star, Zap, Crown
 } from 'lucide-react';
 import { logout, verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalJogadores: number;
@@ -25,6 +26,18 @@ interface DashboardStats {
   };
 }
 
+interface JogadorDestaque {
+  nome: string;
+  pontos: number;
+  categoria: string;
+  torneios: number;
+}
+
+interface TorneioMes {
+  mes: string;
+  quantidade: number;
+}
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
@@ -33,6 +46,8 @@ export default function DashboardPage() {
     solicitacoesPendentes: 0,
     jogadoresPorCategoria: { A: 0, B: 0, C: 0, D: 0, FUN: 0 },
   });
+  const [jogadorDestaque, setJogadorDestaque] = useState<JogadorDestaque | null>(null);
+  const [torneiosPorMes, setTorneiosPorMes] = useState<TorneioMes[]>([]);
   const [adminNome, setAdminNome] = useState('Administrador');
   const router = useRouter();
 
@@ -55,8 +70,8 @@ export default function DashboardPage() {
 
       // Buscar estatísticas
       const [jogadores, torneios, solicitacoes] = await Promise.all([
-        supabase.from('jogadores').select('categoria', { count: 'exact' }),
-        supabase.from('torneios').select('*', { count: 'exact' }),
+        supabase.from('jogadores').select('categoria, nome, pontos, torneios_disputados', { count: 'exact' }),
+        supabase.from('torneios').select('data', { count: 'exact' }),
         supabase.from('solicitacoes_mudanca_categoria').select('*', { count: 'exact' }).eq('status', 'pendente'),
       ]);
 
@@ -67,6 +82,33 @@ export default function DashboardPage() {
           porCategoria[j.categoria as keyof typeof porCategoria]++;
         }
       });
+
+      // Jogador destaque (mais pontos)
+      const destaque = jogadores.data?.sort((a, b) => b.pontos - a.pontos)[0];
+      if (destaque) {
+        setJogadorDestaque({
+          nome: destaque.nome,
+          pontos: destaque.pontos,
+          categoria: destaque.categoria,
+          torneios: destaque.torneios_disputados,
+        });
+      }
+
+      // Torneios por mês (últimos 6 meses)
+      const mesesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const torneiosPorMesData: { [key: string]: number } = {};
+      
+      torneios.data?.forEach((t) => {
+        const data = new Date(t.data);
+        const mesAno = `${mesesPt[data.getMonth()]}/${data.getFullYear().toString().slice(2)}`;
+        torneiosPorMesData[mesAno] = (torneiosPorMesData[mesAno] || 0) + 1;
+      });
+
+      const torneiosMes = Object.entries(torneiosPorMesData)
+        .map(([mes, quantidade]) => ({ mes, quantidade }))
+        .slice(-6);
+
+      setTorneiosPorMes(torneiosMes);
 
       setStats({
         totalJogadores: jogadores.count || 0,
@@ -107,6 +149,23 @@ export default function DashboardPage() {
     { icon: FileText, label: 'Resultados', href: '/admin/resultados', color: 'green' },
     { icon: Settings, label: 'Configurações', href: '/admin/configuracoes', color: 'purple' },
   ];
+
+  // Dados para gráfico de pizza
+  const categoriasData = Object.entries(stats.jogadoresPorCategoria)
+    .filter(([_, count]) => count > 0)
+    .map(([categoria, count]) => ({
+      name: `Categoria ${categoria}`,
+      value: count,
+      categoria,
+    }));
+
+  const COLORS = {
+    A: '#dc2626',
+    B: '#ea580c',
+    C: '#ca8a04',
+    D: '#16a34a',
+    FUN: '#2563eb',
+  };
 
   return (
     <ProtectedRoute>
@@ -208,26 +267,91 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Jogadores por Categoria */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Distribuição por Categoria</h3>
-            <div className="grid grid-cols-5 gap-4">
-              {Object.entries(stats.jogadoresPorCategoria).map(([cat, count]) => (
-                <div key={cat} className="text-center">
-                  <div className={`text-3xl font-bold mb-1 ${
-                    cat === 'A' ? 'text-red-600' :
-                    cat === 'B' ? 'text-orange-600' :
-                    cat === 'C' ? 'text-yellow-600' :
-                    cat === 'D' ? 'text-green-600' :
-                    'text-blue-600'
-                  }`}>
-                    {count}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">Categoria {cat}</div>
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Gráfico de Pizza - Jogadores por Categoria */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary-600" />
+                Distribuição por Categoria
+              </h3>
+              {categoriasData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={categoriasData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${(entry.value)}`}                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoriasData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[entry.categoria as keyof typeof COLORS]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  Sem dados para exibir
                 </div>
-              ))}
+              )}
+            </div>
+
+            {/* Gráfico de Barras - Torneios por Mês */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary-600" />
+                Torneios por Mês
+              </h3>
+              {torneiosPorMes.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={torneiosPorMes}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="mes" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="quantidade" fill="#FCBA28" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  Sem dados para exibir
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Jogador Destaque */}
+          {jogadorDestaque && (
+            <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-xl p-6 mb-8 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                  <Crown className="w-8 h-8 text-primary-200" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Star className="w-5 h-5 text-primary-200" />
+                    <span className="text-sm font-bold text-primary-200 uppercase">Jogador Destaque</span>
+                  </div>
+                  <h3 className="text-2xl font-black mb-1">{jogadorDestaque.nome}</h3>
+                  <div className="flex items-center gap-4 text-sm text-primary-100">
+                    <span>Categoria {jogadorDestaque.categoria}</span>
+                    <span>•</span>
+                    <span className="font-bold">{jogadorDestaque.pontos} pontos</span>
+                    <span>•</span>
+                    <span>{jogadorDestaque.torneios} torneios</span>
+                  </div>
+                </div>
+                <div className="hidden sm:block">
+                  <Zap className="w-12 h-12 text-primary-200" />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Menu de Ações */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
