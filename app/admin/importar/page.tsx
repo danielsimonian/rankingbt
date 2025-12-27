@@ -50,7 +50,8 @@ export default function ImportarPage() {
   const router = useRouter();
 
   useEffect(() => {
-    loadData();
+  loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -458,7 +459,7 @@ Juliana Costa,Quartas de Final`;
                   <textarea
                     value={jogadoresTexto}
                     onChange={(e) => setJogadoresTexto(e.target.value)}
-                    placeholder="Cole aqui os dados dos jogadores no formato CSV..."
+                    placeholder='Cole aqui os dados dos jogadores no formato CSV...'
                     className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
                   />
                   <button
@@ -624,7 +625,7 @@ Juliana Costa,Quartas de Final`;
                       <textarea
                         value={resultadosTexto}
                         onChange={(e) => setResultadosTexto(e.target.value)}
-                        placeholder="Cole aqui os resultados no formato CSV..."
+                        placeholder='Cole aqui os resultados no formato CSV...'
                         className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
                       />
                       <button
