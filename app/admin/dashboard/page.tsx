@@ -12,6 +12,7 @@ import { logout, verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Upload } from 'lucide-react';
 
 interface DashboardStats {
   totalJogadores: number;
@@ -147,6 +148,7 @@ export default function DashboardPage() {
     { icon: AlertCircle, label: 'Solicitações', href: '/admin/solicitacoes', badge: stats.solicitacoesPendentes, color: 'orange' },
     { icon: Trophy, label: 'Torneios', href: '/admin/torneios', color: 'yellow' },
     { icon: FileText, label: 'Resultados', href: '/admin/resultados', color: 'green' },
+    { icon: Upload, label: 'Importar Dados', href: '/admin/importar', color: 'indigo' }, // ✅ ADICIONE ESTA LINHA
     { icon: Settings, label: 'Configurações', href: '/admin/configuracoes', color: 'purple' },
   ];
 
