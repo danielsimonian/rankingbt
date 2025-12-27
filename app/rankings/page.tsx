@@ -217,7 +217,8 @@ export default function RankingsPage() {
                     return (
                       <tr
                         key={jogador.id}
-                        className={`hover:bg-primary-50/30 transition-colors ${
+                        onClick={() => window.location.href = `/jogador/${jogador.id}`}
+                        className={`hover:bg-primary-50/30 transition-colors cursor-pointer group ${
                           isPodium ? podiumBg[index] : ''
                         }`}
                       >
@@ -245,7 +246,7 @@ export default function RankingsPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div>
-                              <div className="font-bold text-gray-900 text-base">
+                              <div className="font-bold text-gray-900 text-base group-hover:text-primary-600 transition-colors">
                                 {jogador.nome}
                               </div>
                               <div className="text-sm text-gray-600">

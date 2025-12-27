@@ -1,7 +1,7 @@
 'use client';
 
 import { Jogador } from '@/types/database';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, ChevronRight } from 'lucide-react';
 
 interface RankingTableProps {
   jogadores: Jogador[];
@@ -57,11 +57,18 @@ export default function RankingTable({ jogadores, showCategoria = false }: Ranki
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Torneios
             </th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {jogadores.map((jogador, index) => (
-            <tr key={jogador.id} className="hover:bg-gray-50 transition-colors">
+            <tr 
+              key={jogador.id} 
+              onClick={() => window.location.href = `/jogador/${jogador.id}`}
+              className="hover:bg-primary-50/30 transition-colors group cursor-pointer"
+            >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   {getPosicaoIcon(jogador.posicao || index + 1)}
@@ -71,7 +78,9 @@ export default function RankingTable({ jogadores, showCategoria = false }: Ranki
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">{jogador.nome}</div>
+                <div className="text-sm font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
+                  {jogador.nome}
+                </div>
                 {jogador.cidade && (
                   <div className="text-xs text-gray-500">{jogador.cidade}</div>
                 )}
@@ -88,6 +97,12 @@ export default function RankingTable({ jogadores, showCategoria = false }: Ranki
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-500">{jogador.torneios_disputados}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right">
+                <div className="inline-flex items-center gap-1 text-sm font-semibold text-gray-400 group-hover:text-primary-600 transition-colors">
+                  Ver perfil
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
               </td>
             </tr>
           ))}
