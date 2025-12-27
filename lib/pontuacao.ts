@@ -1,10 +1,9 @@
 import { supabase } from './supabase';
-import { ConfigPontuacao, PontuacaoCustom, Resultado } from '@/types/database';
-
+import { ConfiguracaoPontuacao, PontuacaoCustom, Resultado } from '@/types/database';
 /**
  * Buscar configuração de pontuação ativa do ano
  */
-export async function getConfigPontuacaoAtiva(): Promise<ConfigPontuacao | null> {
+export async function getConfigPontuacaoAtiva(): Promise<ConfiguracaoPontuacao | null> {
   const anoAtual = new Date().getFullYear();
   
   const { data, error } = await supabase
@@ -27,7 +26,7 @@ export async function getConfigPontuacaoAtiva(): Promise<ConfigPontuacao | null>
  */
 export function calcularPontosPorColocacao(
   colocacao: string,
-  configPadrao: ConfigPontuacao,
+  configPadrao: ConfiguracaoPontuacao,
   pontuacaoCustom?: PontuacaoCustom
 ): number {
   const colocacaoLower = colocacao.toLowerCase();
