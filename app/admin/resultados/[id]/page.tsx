@@ -12,8 +12,7 @@ import { verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { getJogadores } from '@/lib/api';
 import { getConfigPontuacaoAtiva, calcularPontosPorColocacao } from '@/lib/pontuacao';
-import { Torneio, Jogador, Categoria, ConfigPontuacao } from '@/types/database';
-
+import { Torneio, Jogador, Categoria, ConfiguracaoPontuacao } from '@/types/database';
 interface ResultadoForm {
   id: string;
   jogador_id: string;
@@ -28,7 +27,7 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
   const [saving, setSaving] = useState(false);
   const [torneio, setTorneio] = useState<Torneio | null>(null);
   const [jogadores, setJogadores] = useState<Jogador[]>([]);
-  const [configPontuacao, setConfigPontuacao] = useState<ConfigPontuacao | null>(null);
+  const [configPontuacao, setConfigPontuacao] = useState<ConfiguracaoPontuacao | null>(null);
   const [resultados, setResultados] = useState<ResultadoForm[]>([]);
   const [resultadosExistentes, setResultadosExistentes] = useState<any[]>([]);
   const router = useRouter();
@@ -110,16 +109,28 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
           }
         }
 
-        // Recalcular pontos se mudou colocação ou jogador
-        if (field === 'colocacao' || field === 'jogador_id') {
-          if (configPontuacao && updated.colocacao) {
-            updated.pontos_ganhos = calcularPontosPorColocacao(
-              updated.colocacao,
-              configPontuacao,
-              torneio?.pontuacao_custom || undefined
-            );
-          }
-        }
+// Recalcular pontos se mudou colocação ou jogador
+if (field === 'colocacao' || field === 'jogador_id') {
+  if (updated.colocacao && torneio) {
+    // ✅ USA PONTUAÇÃO DO TORNEIO (pontuacao_custom)
+    const pontuacao = torneio.pontuacao_custom || configPontuacao;
+    
+    if (pontuacao) {
+      // Mapear colocação para pontos
+      const mapa: Record<string, keyof typeof pontuacao> = {
+        'Campeão': 'campeao',
+        'Vice': 'vice',
+        '3º Lugar': 'terceiro',
+        'Quartas de Final': 'quartas',
+        'Oitavas de Final': 'oitavas',
+        'Participação': 'participacao',
+      };
+      
+      const chave = mapa[updated.colocacao];
+      updated.pontos_ganhos = chave ? pontuacao[chave] : 0;
+    }
+  }
+}
 
         return updated;
       }

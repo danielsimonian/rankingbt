@@ -26,10 +26,18 @@ export interface Torneio {
   data: string;
   local: string;
   cidade: string;
-  status: StatusTorneio;
-  pontuacao_custom?: PontuacaoCustom;
-  created_at: string;
-  updated_at: string;
+  status: 'confirmado' | 'em_andamento' | 'realizado';
+  pontuacao_custom?: {
+    campeao: number;
+    vice: number;
+    terceiro: number;
+    quartas: number;
+    oitavas: number;
+    participacao: number;
+  };
+  config_pontuacao_id?: string;  // ✅ ADICIONE ESTA LINHA
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Resultado {
@@ -42,9 +50,10 @@ export interface Resultado {
   created_at: string;
 }
 
-export interface ConfigPontuacao {
+export interface ConfiguracaoPontuacao {
   id: string;
-  ano: number;
+  nome: string;  // ✅ NOVO - Aceita qualquer texto
+  descricao?: string;  // ✅ NOVO - Opcional
   campeao: number;
   vice: number;
   terceiro: number;
@@ -52,8 +61,7 @@ export interface ConfigPontuacao {
   oitavas: number;
   participacao: number;
   ativo: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
 }
 
 export interface PontuacaoCustom {
