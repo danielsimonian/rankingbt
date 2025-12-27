@@ -380,6 +380,11 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
           </div>
         </div>
       </div>
+      <div className="mt-8 text-center">
+  <p className="text-sm text-gray-500">
+    Ranking BT - Sistema Oficial de Rankings da Baixada Santista
+  </p>
+</div>
     </div>
   );
 }

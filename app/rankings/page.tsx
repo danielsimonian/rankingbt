@@ -63,6 +63,7 @@ export default function RankingsPage() {
             <Trophy className="w-4 h-4" />
             Sistema Top 10
           </div>
+          <p className="text-sm font-bold text-primary-600 mb-2">RANKING BT</p>
           <h1 className="text-4xl sm:text-5xl font-black mb-4">
             <span className="bg-gradient-to-r from-gray-900 via-royal-900 to-gray-900 bg-clip-text text-transparent">
               Rankings Oficiais

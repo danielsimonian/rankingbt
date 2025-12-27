@@ -49,13 +49,15 @@ export default async function Home() {
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6 tracking-tight leading-tight">
-              Ranking Oficial de
-              <span className="block bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent mt-3 drop-shadow-2xl">
-                Beach Tennis
+              <span className="block bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent drop-shadow-2xl">
+                Ranking BT
               </span>
             </h1>
             <p className="text-2xl sm:text-3xl text-primary-300 mb-6 font-bold">
               Baixada Santista
+            </p>
+            <p className="text-lg text-gray-300 mb-4 max-w-2xl mx-auto">
+              Sistema Oficial de Rankings de Beach Tennis
             </p>
             <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
               Acompanhe o ranking oficial, torneios homologados e os melhores atletas da região em tempo real.
@@ -382,9 +384,9 @@ export default async function Home() {
             </span>
           </div>
           
-          <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight">
-            Acompanhe a <span className="bg-gradient-to-r from-primary-300 via-primary-200 to-primary-300 bg-clip-text text-transparent">Elite</span> do Beach Tennis
-          </h2>
+<h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight">
+  <span className="bg-gradient-to-r from-primary-300 via-primary-200 to-primary-300 bg-clip-text text-transparent">Ranking BT</span> - Baixada Santista
+</h2>
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
             Rankings oficiais atualizados em tempo real. Torneios homologados. Sistema profissional de pontuação.
           </p>
