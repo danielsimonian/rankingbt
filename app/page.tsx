@@ -58,23 +58,23 @@ export default async function Home() {
               Baixada Santista
             </p>
             <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Conquiste sua posição no ranking oficial, dispute torneios homologados e faça parte da elite do beach tennis regional.
+              Acompanhe o ranking oficial, torneios homologados e os melhores atletas da região em tempo real.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
-                href="/cadastro"
+                href="/rankings"
                 className="group relative bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-10 py-4 rounded-xl font-black hover:from-primary-400 hover:to-primary-500 transition-all duration-300 inline-flex items-center justify-center gap-2 shadow-2xl shadow-primary-500/50 hover:shadow-primary-400/60 hover:scale-105 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
                 <Trophy className="w-5 h-5 relative z-10" />
-                <span className="relative z-10">Cadastrar-se Grátis</span>
+                <span className="relative z-10">Ver Rankings Oficiais</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
               </Link>
               <Link 
-                href="/rankings"
+                href="#torneios"
                 className="bg-white/10 backdrop-blur-sm text-white px-10 py-4 rounded-xl font-bold hover:bg-white/20 transition-all duration-300 border-2 border-white/30 shadow-xl hover:shadow-2xl hover:scale-105"
               >
-                Ver Rankings
+                Próximos Torneios
               </Link>
             </div>
           </div>
@@ -273,7 +273,7 @@ export default async function Home() {
       </section>
 
       {/* Próximos Torneios */}
-      <section className="py-20 bg-white">
+      <section id="torneios" className="py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <div>
@@ -342,7 +342,7 @@ export default async function Home() {
                   {/* Premium Badge */}
                   <div className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-full text-xs font-black shadow-lg">
                     <Zap className="w-3 h-3" />
-                    INSCRIÇÕES ABERTAS
+                    CONFIRMADO
                   </div>
                 </div>
               </div>
@@ -378,32 +378,32 @@ export default async function Home() {
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500/30 to-primary-600/30 backdrop-blur-sm px-5 py-2.5 rounded-full mb-8 border border-primary-400/40 shadow-2xl shadow-primary-500/20">
             <Sparkles className="w-4 h-4 text-primary-300" />
             <span className="text-sm font-black bg-gradient-to-r from-primary-200 to-white bg-clip-text text-transparent">
-              100% GRATUITO
+              SISTEMA OFICIAL HOMOLOGADO
             </span>
           </div>
           
           <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight">
-            Entre para a <span className="bg-gradient-to-r from-primary-300 via-primary-200 to-primary-300 bg-clip-text text-transparent">Elite</span> do Ranking
+            Acompanhe a <span className="bg-gradient-to-r from-primary-300 via-primary-200 to-primary-300 bg-clip-text text-transparent">Elite</span> do Beach Tennis
           </h2>
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
-            Cadastre-se gratuitamente e faça parte do sistema oficial de ranking de Beach Tennis da Baixada Santista. Comece a competir hoje mesmo!
+            Rankings oficiais atualizados em tempo real. Torneios homologados. Sistema profissional de pontuação.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Link 
-              href="/cadastro"
+              href="/rankings"
               className="group relative bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-12 py-5 rounded-xl font-black text-lg hover:from-primary-400 hover:to-primary-500 transition-all duration-300 inline-flex items-center justify-center gap-3 shadow-2xl shadow-primary-500/50 hover:shadow-primary-400/60 hover:scale-110 overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
               <Trophy className="w-6 h-6 relative z-10" />
-              <span className="relative z-10">Cadastrar Agora</span>
+              <span className="relative z-10">Ver Rankings</span>
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform relative z-10" />
             </Link>
             <Link 
-              href="/como-funciona"
+              href="#torneios"
               className="bg-white/10 backdrop-blur-sm text-white px-12 py-5 rounded-xl font-black text-lg hover:bg-white/20 transition-all duration-300 border-2 border-white/30 shadow-2xl hover:scale-105"
             >
-              Como Funciona
+              Próximos Torneios
             </Link>
           </div>
           
@@ -411,8 +411,8 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
               { icon: Trophy, text: 'Sistema Oficial Homologado' },
-              { icon: TrendingUp, text: 'Evolução em Tempo Real' },
-              { icon: Users, text: 'Comunidade Premium' },
+              { icon: TrendingUp, text: 'Rankings em Tempo Real' },
+              { icon: Calendar, text: 'Calendário de Torneios' },
             ].map((feature, index) => (
               <div 
                 key={index} 

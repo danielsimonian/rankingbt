@@ -51,12 +51,6 @@ export default function Footer() {
                   Torneios
                 </Link>
               </li>
-              <li>
-                <Link href="/cadastro" className="text-gray-400 hover:text-primary-400 text-sm transition-colors flex items-center gap-2 group">
-                  <span className="w-1 h-1 bg-primary-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                  Cadastrar
-                </Link>
-              </li>
             </ul>
           </div>
 

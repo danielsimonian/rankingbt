@@ -29,13 +29,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-2">
-            <Link 
-              href="/rankings" 
-              className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
-            >
-              <span className="relative z-10">Rankings</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
-            </Link>
+
             <Link 
               href="/como-funciona" 
               className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
@@ -50,13 +44,12 @@ export default function Header() {
               <span className="relative z-10">Torneios</span>
               <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
             </Link>
-            <Link 
-              href="/cadastro" 
-              className="ml-3 relative group bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-7 py-3 rounded-xl hover:from-primary-400 hover:to-primary-500 font-black transition-all hover:scale-105 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <span className="relative z-10">Cadastrar</span>
-            </Link>
+<Link
+  href="/rankings"
+  className="bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-6 py-2.5 rounded-lg font-bold hover:from-primary-400 hover:to-primary-500 transition-all shadow-lg hover:shadow-xl"
+>
+  Ver Rankings
+</Link>
           </div>
 
           {/* Mobile menu button */}
