@@ -295,26 +295,11 @@ export default function ImportarPage() {
             categoria_jogada: resultado.categoria, // ← CATEGORIA VEM DO CSV!
           });
 
-        // Atualizar pontos do jogador
-        const { data: jogador } = await supabase
-          .from('jogadores')
-          .select('pontos, torneios_disputados')
-          .eq('id', resultado.jogador_id)
-          .single();
-
-        if (jogador) {
-          await supabase
-            .from('jogadores')
-            .update({
-              pontos: jogador.pontos + (resultado.pontos || 0),
-              torneios_disputados: jogador.torneios_disputados + 1,
-            })
-            .eq('id', resultado.jogador_id);
-        }
+        // ✅ TRIGGER RECALCULA AUTOMATICAMENTE!
+        // NÃO precisa atualizar pontos manualmente!
       }
 
-      // ✅ TRIGGER RECALCULA AUTOMATICAMENTE!
-      alert(`✅ ${resultadosValidos.length} resultado(s) importado(s)!\n🔄 Categorias recalculadas automaticamente!`);
+      alert(`✅ ${resultadosValidos.length} resultado(s) importado(s)!\n🔄 Categorias e pontos recalculados automaticamente!`);
       setResultadosPreview([]);
       setResultadosTexto('');
       
