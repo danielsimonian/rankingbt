@@ -10,7 +10,6 @@ import {
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { recalcularCategoriasEmLote } from '@/lib/categoria-utils';
 import { Categoria, Genero } from '@/types/database';
 
 interface JogadorImport {
@@ -27,6 +26,7 @@ interface JogadorImport {
 interface ResultadoImport {
   nome_jogador: string;
   colocacao: string;
+  categoria: Categoria; // ← NOVO!
   jogador_id?: string;
   pontos?: number;
   status?: 'ok' | 'erro';
@@ -210,9 +210,11 @@ export default function ImportarPage() {
 
       const parts = line.split(',').map(p => p.trim());
       
-      if (parts.length >= 2) {
+      // FORMATO: nome_jogador,colocacao,categoria
+      if (parts.length >= 3) {
         const nomeJogador = parts[0];
         const colocacao = parts[1];
+        const categoria = parts[2].toUpperCase() as Categoria;
 
         const jogador = jogadores?.find(j => 
           j.nome.toLowerCase() === nomeJogador.toLowerCase()
@@ -221,12 +223,16 @@ export default function ImportarPage() {
         const resultado: ResultadoImport = {
           nome_jogador: nomeJogador,
           colocacao: colocacao,
+          categoria: categoria,
           jogador_id: jogador?.id,
         };
 
         if (!jogador) {
           resultado.status = 'erro';
           resultado.erro = 'Jogador não cadastrado';
+        } else if (!['A', 'B', 'C', 'D', 'FUN'].includes(categoria)) {
+          resultado.status = 'erro';
+          resultado.erro = 'Categoria inválida';
         } else {
           resultado.status = 'ok';
           resultado.pontos = calcularPontosDinamico(colocacao, torneioData?.pontuacao_custom);
@@ -276,9 +282,9 @@ export default function ImportarPage() {
 
     try {
       const resultadosValidos = resultadosPreview.filter(r => r.status === 'ok');
-      const jogadoresAtualizados = new Set<string>();
 
       for (const resultado of resultadosValidos) {
+        // Inserir resultado COM categoria_jogada
         await supabase
           .from('resultados')
           .insert({
@@ -286,12 +292,10 @@ export default function ImportarPage() {
             jogador_id: resultado.jogador_id,
             colocacao: resultado.colocacao,
             pontos_ganhos: resultado.pontos,
+            categoria_jogada: resultado.categoria, // ← CATEGORIA VEM DO CSV!
           });
 
-        if (resultado.jogador_id) {
-          jogadoresAtualizados.add(resultado.jogador_id);
-        }
-
+        // Atualizar pontos do jogador
         const { data: jogador } = await supabase
           .from('jogadores')
           .select('pontos, torneios_disputados')
@@ -309,9 +313,7 @@ export default function ImportarPage() {
         }
       }
 
-      // ✅ RECALCULAR CATEGORIAS usando função do arquivo externo
-      await recalcularCategoriasEmLote(jogadoresAtualizados);
-
+      // ✅ TRIGGER RECALCULA AUTOMATICAMENTE!
       alert(`✅ ${resultadosValidos.length} resultado(s) importado(s)!\n🔄 Categorias recalculadas automaticamente!`);
       setResultadosPreview([]);
       setResultadosTexto('');
@@ -325,8 +327,8 @@ export default function ImportarPage() {
 
   const downloadTemplateJogadores = () => {
     const csv = `nome,email,telefone,cidade,categoria,genero
-Daniel Simonian,daniel@email.com,(13)99743-4878,Santos,A,Masculino
-Fernanda Lima,fernanda@email.com,(13)98765-4321,Guarujá,B,Feminino`;
+CORA LEITE LIMA,cora@email.com,(13)99999-9999,Santos,B,Feminino
+MARIA SILVA,maria@email.com,(13)98888-8888,Guarujá,C,Feminino`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -337,10 +339,10 @@ Fernanda Lima,fernanda@email.com,(13)98765-4321,Guarujá,B,Feminino`;
   };
 
   const downloadTemplateResultados = () => {
-    const csv = `nome_jogador,colocacao
-Daniel Simonian,Campeão
-Fernanda Lima,Vice
-Carlos Silva,3º Lugar`;
+    const csv = `nome_jogador,colocacao,categoria
+CORA LEITE LIMA,Campeão,B
+MARIA SILVA,Vice,C
+JOÃO SANTOS,3º Lugar,A`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -365,7 +367,7 @@ Carlos Silva,3º Lugar`;
                 </Link>
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">Importar Dados</h1>
-                  <p className="text-xs text-gray-500">Sistema com Recálculo Automático de Categorias</p>
+                  <p className="text-xs text-gray-500">Sistema com Categoria no CSV</p>
                 </div>
               </div>
             </div>
@@ -410,26 +412,21 @@ Carlos Silva,3º Lugar`;
                   <div className="flex gap-3">
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900">
-                      <h4 className="font-bold mb-2">📋 Como importar jogadores:</h4>
-                      <ol className="list-decimal list-inside space-y-1">
-                        <li>Baixe o template CSV</li>
-                        <li>Preencha os dados</li>
-                        <li>Faça upload ou cole o conteúdo</li>
-                        <li>Confira e importe</li>
-                      </ol>
+                      <h4 className="font-bold mb-2">📋 Formato CSV:</h4>
+                      <code className="bg-white px-2 py-1 rounded text-xs">
+                        nome,email,telefone,cidade,categoria,genero
+                      </code>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-4 mb-6">
-                  <button
-                    onClick={downloadTemplateJogadores}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                  >
-                    <Download className="w-4 h-4" />
-                    Baixar Template CSV
-                  </button>
-                </div>
+                <button
+                  onClick={downloadTemplateJogadores}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mb-6 font-semibold"
+                >
+                  <Download className="w-4 h-4" />
+                  Baixar Template
+                </button>
 
                 <div className="mb-6">
                   <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -530,10 +527,12 @@ Carlos Silva,3º Lugar`;
                   <div className="flex gap-3">
                     <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-900">
-                      <h4 className="font-bold mb-2">🔄 Recálculo Automático</h4>
-                      <p>
-                        Ao importar resultados, o sistema <strong>recalcula automaticamente</strong> a 
-                        categoria de cada jogador com base na categoria onde ele mais jogou!
+                      <h4 className="font-bold mb-2">🎯 Formato CSV (COM CATEGORIA):</h4>
+                      <code className="bg-white px-2 py-1 rounded text-xs block mb-2">
+                        nome_jogador,colocacao,categoria
+                      </code>
+                      <p className="font-bold">
+                        ⚡ A categoria é definida AQUI, não no torneio!
                       </p>
                     </div>
                   </div>
@@ -570,7 +569,7 @@ Carlos Silva,3º Lugar`;
                     <textarea
                       value={resultadosTexto}
                       onChange={(e) => setResultadosTexto(e.target.value)}
-                      placeholder="Cole os resultados..."
+                      placeholder="nome_jogador,colocacao,categoria"
                       className="w-full h-40 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm mb-3"
                     />
                     <button
@@ -590,7 +589,9 @@ Carlos Silva,3º Lugar`;
                               <div className="flex justify-between">
                                 <div>
                                   <div className="font-semibold">{r.nome_jogador}</div>
-                                  <div className="text-sm text-gray-600">{r.colocacao} • {r.pontos} pts</div>
+                                  <div className="text-sm text-gray-600">
+                                    {r.colocacao} • Categoria {r.categoria} • {r.pontos} pts
+                                  </div>
                                 </div>
                                 {r.status === 'erro' ? (
                                   <span className="text-red-600 text-sm">{r.erro}</span>
