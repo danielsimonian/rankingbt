@@ -1,16 +1,16 @@
 import { supabase } from './supabase';
 import { ConfiguracaoPontuacao, PontuacaoCustom, Resultado } from '@/types/database';
+
 /**
- * Buscar configuração de pontuação ativa do ano
+ * Buscar uma configuração de pontuação qualquer (fallback)
+ * Usado apenas se o torneio não tiver pontuacao_custom
  */
 export async function getConfigPontuacaoAtiva(): Promise<ConfiguracaoPontuacao | null> {
-  const anoAtual = new Date().getFullYear();
-  
+  // Busca qualquer configuração (pega a primeira)
   const { data, error } = await supabase
     .from('config_pontuacao')
     .select('*')
-    .eq('ano', anoAtual)
-    .eq('ativo', true)
+    .limit(1)
     .single();
 
   if (error) {
@@ -23,55 +23,97 @@ export async function getConfigPontuacaoAtiva(): Promise<ConfiguracaoPontuacao |
 
 /**
  * Calcular pontos com base na colocação
+ * SEMPRE usa pontuacao_custom se disponível
  */
 export function calcularPontosPorColocacao(
   colocacao: string,
-  configPadrao: ConfiguracaoPontuacao,
+  configPadrao: ConfiguracaoPontuacao | null,
   pontuacaoCustom?: PontuacaoCustom
 ): number {
   const colocacaoLower = colocacao.toLowerCase();
 
-  // Determinar valores a usar (custom tem prioridade)
-  const campeao = pontuacaoCustom?.campeao ?? configPadrao.campeao;
-  const vice = pontuacaoCustom?.vice ?? configPadrao.vice;
-  const terceiro = pontuacaoCustom?.terceiro ?? configPadrao.terceiro;
-  const quartas = pontuacaoCustom?.quartas ?? configPadrao.quartas;
-  const oitavas = pontuacaoCustom?.oitavas ?? configPadrao.oitavas;
-  const participacao = pontuacaoCustom?.participacao ?? configPadrao.participacao;
+  // Se tem pontuacao_custom, usa ela (prioritário!)
+  if (pontuacaoCustom) {
+    const mapa: Record<string, keyof PontuacaoCustom> = {
+      'campeao': 'campeao',
+      'campeão': 'campeao',
+      '1': 'campeao',
+      '1º': 'campeao',
+      'primeiro': 'campeao',
+      
+      'vice': 'vice',
+      '2': 'vice',
+      '2º': 'vice',
+      'segundo': 'vice',
+      
+      'terceiro': 'terceiro',
+      '3': 'terceiro',
+      '3º': 'terceiro',
+      '3º lugar': 'terceiro',
+      
+      'quartas': 'quartas',
+      'quarta': 'quartas',
+      'quartasfinal': 'quartas',
+      'quartas de final': 'quartas',
+      
+      'oitavas': 'oitavas',
+      'oitava': 'oitavas',
+      'oitavasfinal': 'oitavas',
+      'oitavas de final': 'oitavas',
+      
+      'participacao': 'participacao',
+      'participação': 'participacao',
+      'participou': 'participacao',
+    };
 
-  // Mapeamento de colocações
+    const chave = mapa[colocacaoLower];
+    if (chave && pontuacaoCustom[chave] !== undefined) {
+      return pontuacaoCustom[chave] as number;
+    }
+    
+    // Fallback para participação se não encontrar
+    return pontuacaoCustom.participacao || 0;
+  }
+
+  // Se não tem custom e não tem config padrão, retorna 0
+  if (!configPadrao) {
+    return 0;
+  }
+
+  // Usa config padrão como último recurso
   const mapa: Record<string, number> = {
-    'campeao': campeao,
-    'campeão': campeao,
-    '1': campeao,
-    '1º': campeao,
-    'primeiro': campeao,
+    'campeao': configPadrao.campeao,
+    'campeão': configPadrao.campeao,
+    '1': configPadrao.campeao,
+    '1º': configPadrao.campeao,
+    'primeiro': configPadrao.campeao,
     
-    'vice': vice,
-    '2': vice,
-    '2º': vice,
-    'segundo': vice,
+    'vice': configPadrao.vice,
+    '2': configPadrao.vice,
+    '2º': configPadrao.vice,
+    'segundo': configPadrao.vice,
     
-    'terceiro': terceiro,
-    '3': terceiro,
-    '3º': terceiro,
+    'terceiro': configPadrao.terceiro,
+    '3': configPadrao.terceiro,
+    '3º': configPadrao.terceiro,
+    '3º lugar': configPadrao.terceiro,
     
-    'quartas': quartas,
-    'quarta': quartas,
-    'quartasfinal': quartas,
-    'quartas de final': quartas,
+    'quartas': configPadrao.quartas,
+    'quarta': configPadrao.quartas,
+    'quartasfinal': configPadrao.quartas,
+    'quartas de final': configPadrao.quartas,
     
-    'oitavas': oitavas,
-    'oitava': oitavas,
-    'oitavasfinal': oitavas,
-    'oitavas de final': oitavas,
+    'oitavas': configPadrao.oitavas,
+    'oitava': configPadrao.oitavas,
+    'oitavasfinal': configPadrao.oitavas,
+    'oitavas de final': configPadrao.oitavas,
     
-    'participacao': participacao,
-    'participação': participacao,
-    'participou': participacao,
+    'participacao': configPadrao.participacao,
+    'participação': configPadrao.participacao,
+    'participou': configPadrao.participacao,
   };
 
-  return mapa[colocacaoLower] || participacao;
+  return mapa[colocacaoLower] || configPadrao.participacao;
 }
 
 /**
