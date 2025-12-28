@@ -50,7 +50,8 @@ export default function ImportarPage() {
   const router = useRouter();
 
   useEffect(() => {
-  loadData();
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -195,6 +196,13 @@ export default function ImportarPage() {
 
     setLoading(true);
 
+    // ✅ BUSCAR TORNEIO COM PONTUAÇÃO
+    const { data: torneioData } = await supabase
+      .from('torneios')
+      .select('pontuacao_custom')
+      .eq('id', torneioSelecionado)
+      .single();
+
     const lines = resultadosTexto.trim().split('\n');
     const resultados: ResultadoImport[] = [];
 
@@ -232,8 +240,8 @@ export default function ImportarPage() {
           resultado.erro = 'Jogador não cadastrado';
         } else {
           resultado.status = 'ok';
-          // Calcular pontos baseado na colocação
-          resultado.pontos = calcularPontos(colocacao);
+          // ✅ CALCULAR PONTOS USANDO PONTUAÇÃO DO TORNEIO
+          resultado.pontos = calcularPontosDinamico(colocacao, torneioData?.pontuacao_custom);
         }
 
         resultados.push(resultado);
@@ -244,17 +252,33 @@ export default function ImportarPage() {
     setLoading(false);
   };
 
-  const calcularPontos = (colocacao: string): number => {
-    const pontos: Record<string, number> = {
-      'Campeão': 100,
-      'Vice': 75,
-      '3º Lugar': 50,
-      'Quartas de Final': 25,
-      'Oitavas de Final': 10,
-      'Participação': 5,
-    };
+  // ✅ NOVA FUNÇÃO QUE USA PONTUAÇÃO DINÂMICA DO TORNEIO
+  const calcularPontosDinamico = (colocacao: string, pontuacaoCustom: any): number => {
+    if (!pontuacaoCustom) {
+      // Fallback para valores padrão se não tiver custom
+      const pontosPadrao: Record<string, number> = {
+        'Campeão': 100,
+        'Vice': 75,
+        '3º Lugar': 50,
+        'Quartas de Final': 25,
+        'Oitavas de Final': 10,
+        'Participação': 5,
+      };
+      return pontosPadrao[colocacao] || 0;
+    }
 
-    return pontos[colocacao] || 0;
+    // Usa pontuação do torneio
+    const mapa: Record<string, keyof typeof pontuacaoCustom> = {
+      'Campeão': 'campeao',
+      'Vice': 'vice',
+      '3º Lugar': 'terceiro',
+      'Quartas de Final': 'quartas',
+      'Oitavas de Final': 'oitavas',
+      'Participação': 'participacao',
+    };
+    
+    const chave = mapa[colocacao];
+    return chave ? (pontuacaoCustom[chave] as number) : 0;
   };
 
   const importarResultados = async () => {
