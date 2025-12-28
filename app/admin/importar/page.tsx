@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, Upload, Download, FileSpreadsheet, Users, Trophy,
-  CheckCircle, AlertCircle, Info, Loader2, FileText, Copy
+  ArrowLeft, Upload, Download, Users, Trophy,
+  CheckCircle, AlertCircle, Info, Loader2
 } from 'lucide-react';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { recalcularCategoriasEmLote } from '@/lib/categoria-utils';
 import { Categoria, Genero } from '@/types/database';
 
 interface JogadorImport {
@@ -37,11 +38,9 @@ export default function ImportarPage() {
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   
-  // Jogadores
   const [jogadoresPreview, setJogadoresPreview] = useState<JogadorImport[]>([]);
   const [jogadoresTexto, setJogadoresTexto] = useState('');
   
-  // Resultados
   const [torneioSelecionado, setTorneioSelecionado] = useState('');
   const [torneios, setTorneios] = useState<any[]>([]);
   const [resultadosPreview, setResultadosPreview] = useState<ResultadoImport[]>([]);
@@ -51,7 +50,6 @@ export default function ImportarPage() {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -61,7 +59,6 @@ export default function ImportarPage() {
       return;
     }
 
-    // Buscar torneios
     const { data } = await supabase
       .from('torneios')
       .select('*')
@@ -94,8 +91,7 @@ export default function ImportarPage() {
     const lines = text.trim().split('\n');
     const jogadores: JogadorImport[] = [];
 
-    // Detectar se tem header
-    const hasHeader = lines[0].toLowerCase().includes('nome') || lines[0].toLowerCase().includes('jogador');
+    const hasHeader = lines[0].toLowerCase().includes('nome');
     const startIndex = hasHeader ? 1 : 0;
 
     for (let i = startIndex; i < lines.length; i++) {
@@ -114,7 +110,6 @@ export default function ImportarPage() {
           genero: (parts[5] || 'Masculino') as Genero,
         };
 
-        // Validar
         if (!jogador.nome) {
           jogador.status = 'erro';
           jogador.erro = 'Nome obrigatório';
@@ -139,7 +134,6 @@ export default function ImportarPage() {
       const jogadoresValidos = jogadoresPreview.filter(j => j.status !== 'erro');
       
       for (const jogador of jogadoresValidos) {
-        // Verificar se já existe
         const { data: existente } = await supabase
           .from('jogadores')
           .select('id')
@@ -147,7 +141,6 @@ export default function ImportarPage() {
           .single();
 
         if (existente) {
-          // Atualizar
           await supabase
             .from('jogadores')
             .update({
@@ -159,7 +152,6 @@ export default function ImportarPage() {
             })
             .eq('id', existente.id);
         } else {
-          // Criar novo
           await supabase
             .from('jogadores')
             .insert({
@@ -196,7 +188,6 @@ export default function ImportarPage() {
 
     setLoading(true);
 
-    // ✅ BUSCAR TORNEIO COM PONTUAÇÃO
     const { data: torneioData } = await supabase
       .from('torneios')
       .select('pontuacao_custom')
@@ -206,12 +197,11 @@ export default function ImportarPage() {
     const lines = resultadosTexto.trim().split('\n');
     const resultados: ResultadoImport[] = [];
 
-    // Buscar todos os jogadores
     const { data: jogadores } = await supabase
       .from('jogadores')
       .select('id, nome');
 
-    const hasHeader = lines[0].toLowerCase().includes('nome') || lines[0].toLowerCase().includes('jogador');
+    const hasHeader = lines[0].toLowerCase().includes('nome');
     const startIndex = hasHeader ? 1 : 0;
 
     for (let i = startIndex; i < lines.length; i++) {
@@ -224,7 +214,6 @@ export default function ImportarPage() {
         const nomeJogador = parts[0];
         const colocacao = parts[1];
 
-        // Buscar jogador
         const jogador = jogadores?.find(j => 
           j.nome.toLowerCase() === nomeJogador.toLowerCase()
         );
@@ -240,7 +229,6 @@ export default function ImportarPage() {
           resultado.erro = 'Jogador não cadastrado';
         } else {
           resultado.status = 'ok';
-          // ✅ CALCULAR PONTOS USANDO PONTUAÇÃO DO TORNEIO
           resultado.pontos = calcularPontosDinamico(colocacao, torneioData?.pontuacao_custom);
         }
 
@@ -252,22 +240,19 @@ export default function ImportarPage() {
     setLoading(false);
   };
 
-  // ✅ NOVA FUNÇÃO QUE USA PONTUAÇÃO DINÂMICA DO TORNEIO
   const calcularPontosDinamico = (colocacao: string, pontuacaoCustom: any): number => {
     if (!pontuacaoCustom) {
-      // Fallback para valores padrão se não tiver custom
       const pontosPadrao: Record<string, number> = {
         'Campeão': 100,
-        'Vice': 75,
-        '3º Lugar': 50,
-        'Quartas de Final': 25,
-        'Oitavas de Final': 10,
-        'Participação': 5,
+        'Vice': 60,
+        '3º Lugar': 36,
+        'Quartas de Final': 18,
+        'Oitavas de Final': 9,
+        'Participação': 4,
       };
       return pontosPadrao[colocacao] || 0;
     }
 
-    // Usa pontuação do torneio
     const mapa: Record<string, keyof typeof pontuacaoCustom> = {
       'Campeão': 'campeao',
       'Vice': 'vice',
@@ -291,9 +276,9 @@ export default function ImportarPage() {
 
     try {
       const resultadosValidos = resultadosPreview.filter(r => r.status === 'ok');
+      const jogadoresAtualizados = new Set<string>();
 
       for (const resultado of resultadosValidos) {
-        // Inserir resultado
         await supabase
           .from('resultados')
           .insert({
@@ -303,7 +288,10 @@ export default function ImportarPage() {
             pontos_ganhos: resultado.pontos,
           });
 
-        // Atualizar pontos do jogador
+        if (resultado.jogador_id) {
+          jogadoresAtualizados.add(resultado.jogador_id);
+        }
+
         const { data: jogador } = await supabase
           .from('jogadores')
           .select('pontos, torneios_disputados')
@@ -321,7 +309,10 @@ export default function ImportarPage() {
         }
       }
 
-      alert(`✅ ${resultadosValidos.length} resultado(s) importado(s) com sucesso!`);
+      // ✅ RECALCULAR CATEGORIAS usando função do arquivo externo
+      await recalcularCategoriasEmLote(jogadoresAtualizados);
+
+      alert(`✅ ${resultadosValidos.length} resultado(s) importado(s)!\n🔄 Categorias recalculadas automaticamente!`);
       setResultadosPreview([]);
       setResultadosTexto('');
       
@@ -335,8 +326,7 @@ export default function ImportarPage() {
   const downloadTemplateJogadores = () => {
     const csv = `nome,email,telefone,cidade,categoria,genero
 Daniel Simonian,daniel@email.com,(13)99743-4878,Santos,A,Masculino
-Fernanda Lima,fernanda@email.com,(13)98765-4321,Guarujá,B,Feminino
-Carlos Silva,carlos@email.com,(13)97654-3210,São Vicente,A,Masculino`;
+Fernanda Lima,fernanda@email.com,(13)98765-4321,Guarujá,B,Feminino`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -350,8 +340,7 @@ Carlos Silva,carlos@email.com,(13)97654-3210,São Vicente,A,Masculino`;
     const csv = `nome_jogador,colocacao
 Daniel Simonian,Campeão
 Fernanda Lima,Vice
-Carlos Silva,3º Lugar
-Juliana Costa,Quartas de Final`;
+Carlos Silva,3º Lugar`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -364,7 +353,6 @@ Juliana Costa,Quartas de Final`;
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
         <header className="bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -377,16 +365,14 @@ Juliana Costa,Quartas de Final`;
                 </Link>
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">Importar Dados</h1>
-                  <p className="text-xs text-gray-500">Sistema Premium de Importação</p>
+                  <p className="text-xs text-gray-500">Sistema com Recálculo Automático de Categorias</p>
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Tabs */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
             <div className="flex border-b border-gray-200">
               <button
@@ -417,40 +403,24 @@ Juliana Costa,Quartas de Final`;
               </button>
             </div>
 
-            {/* Content Jogadores */}
+            {/* TAB JOGADORES */}
             {activeTab === 'jogadores' && (
               <div className="p-6">
-                {/* Tutorial */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <div className="flex gap-3">
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900">
                       <h4 className="font-bold mb-2">📋 Como importar jogadores:</h4>
-                      <ol className="list-decimal list-inside space-y-1 mb-3">
-                        <li>Baixe o template CSV clicando no botão abaixo</li>
-                        <li>Preencha com os dados dos jogadores</li>
-                        <li>Faça upload do arquivo OU cole o conteúdo na caixa de texto</li>
-                        <li>Confira o preview e clique em &quot;Importar&quot;</li>
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>Baixe o template CSV</li>
+                        <li>Preencha os dados</li>
+                        <li>Faça upload ou cole o conteúdo</li>
+                        <li>Confira e importe</li>
                       </ol>
-                      <div className="bg-white border border-blue-200 rounded p-3 font-mono text-xs mb-2">
-                        <div className="font-bold text-blue-800 mb-1">Exemplo de formato correto:</div>
-                        <div className="text-gray-700">
-                          nome,email,telefone,cidade,categoria,genero<br/>
-                          Daniel Simonian,daniel@email.com,(13)99743-4878,Santos,A,Masculino<br/>
-                          Fernanda Lima,fernanda@email.com,(13)98765-4321,Guarujá,B,Feminino
-                        </div>
-                      </div>
-                      <p className="font-semibold text-blue-800">
-                        ⚠️ Ordem obrigatória: nome, email, telefone, cidade, categoria, genero
-                      </p>
-                      <p className="mt-2 font-semibold">
-                        ✨ O sistema detecta automaticamente se o jogador já existe e atualiza os dados!
-                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Download Template */}
                 <div className="flex gap-4 mb-6">
                   <button
                     onClick={downloadTemplateJogadores}
@@ -461,10 +431,9 @@ Juliana Costa,Quartas de Final`;
                   </button>
                 </div>
 
-                {/* Upload File */}
                 <div className="mb-6">
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    📁 Opção 1: Upload de arquivo CSV
+                    📁 Upload CSV
                   </label>
                   <input
                     type="file"
@@ -474,86 +443,67 @@ Juliana Costa,Quartas de Final`;
                   />
                 </div>
 
-                {/* Texto */}
                 <div className="mb-6">
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    📝 Opção 2: Colar dados (CSV)
+                    📝 Ou cole os dados
                   </label>
                   <textarea
                     value={jogadoresTexto}
                     onChange={(e) => setJogadoresTexto(e.target.value)}
-                    placeholder="Cole aqui os dados dos jogadores no formato CSV..."
-                    className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+                    placeholder="Cole aqui..."
+                    className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
                   />
                   <button
                     onClick={processarJogadoresTexto}
                     disabled={!jogadoresTexto.trim() || loading}
-                    className="mt-3 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
+                    className="mt-3 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold disabled:opacity-50"
                   >
-                    {loading ? 'Processando...' : 'Processar Dados'}
+                    {loading ? 'Processando...' : 'Processar'}
                   </button>
                 </div>
 
-                {/* Preview */}
                 {jogadoresPreview.length > 0 && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <div className="bg-gray-50 border rounded-lg p-4">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-600" />
-                      Preview: {jogadoresPreview.length} jogador(es) encontrado(s)
+                      Preview: {jogadoresPreview.length} jogador(es)
                     </h3>
-
                     <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
-                      {jogadoresPreview.map((jogador, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 rounded-lg ${
-                            jogador.status === 'erro'
-                              ? 'bg-red-50 border border-red-200'
-                              : 'bg-white border border-gray-200'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="font-semibold text-gray-900">
-                                {jogador.nome}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {jogador.email || 'Sem email'} • {jogador.cidade || 'Sem cidade'} • 
-                                Cat. {jogador.categoria} • {jogador.genero}
-                              </div>
-                            </div>
+                      {jogadoresPreview.map((j, i) => (
+                        <div key={i} className={`p-3 rounded-lg ${j.status === 'erro' ? 'bg-red-50' : 'bg-white'}`}>
+                          <div className="flex justify-between items-center">
                             <div>
-                              {jogador.status === 'erro' ? (
-                                <span className="text-red-600 text-sm font-semibold flex items-center gap-1">
-                                  <AlertCircle className="w-4 h-4" />
-                                  {jogador.erro}
-                                </span>
-                              ) : (
-                                <span className="text-green-600 text-sm font-semibold flex items-center gap-1">
-                                  <CheckCircle className="w-4 h-4" />
-                                  OK
-                                </span>
-                              )}
+                              <div className="font-semibold">{j.nome}</div>
+                              <div className="text-sm text-gray-600">
+                                {j.categoria} • {j.genero}
+                              </div>
                             </div>
+                            {j.status === 'erro' ? (
+                              <span className="text-red-600 text-sm flex items-center gap-1">
+                                <AlertCircle className="w-4 h-4" />
+                                {j.erro}
+                              </span>
+                            ) : (
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
-
                     <div className="flex justify-end gap-3">
                       <button
                         onClick={() => {
                           setJogadoresPreview([]);
                           setJogadoresTexto('');
                         }}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={importarJogadores}
-                        disabled={importing || jogadoresPreview.every(j => j.status === 'erro')}
-                        className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
+                        disabled={importing}
+                        className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold disabled:opacity-50"
                       >
                         {importing ? (
                           <>
@@ -563,7 +513,7 @@ Juliana Costa,Quartas de Final`;
                         ) : (
                           <>
                             <Upload className="w-4 h-4" />
-                            Importar {jogadoresPreview.filter(j => j.status !== 'erro').length} Jogador(es)
+                            Importar {jogadoresPreview.filter(j => j.status !== 'erro').length}
                           </>
                         )}
                       </button>
@@ -573,42 +523,22 @@ Juliana Costa,Quartas de Final`;
               </div>
             )}
 
-            {/* Content Resultados */}
+            {/* TAB RESULTADOS */}
             {activeTab === 'resultados' && (
               <div className="p-6">
-                {/* Tutorial */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                   <div className="flex gap-3">
-                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-900">
-                      <h4 className="font-bold mb-2">🏆 Como importar resultados:</h4>
-                      <ol className="list-decimal list-inside space-y-1 mb-3">
-                        <li>Selecione o torneio abaixo</li>
-                        <li>Baixe o template CSV ou cole os dados</li>
-                        <li>Use o formato: nome_jogador,colocacao</li>
-                        <li>Confira o preview e clique em &quot;Importar&quot;</li>
-                      </ol>
-                      <div className="bg-white border border-blue-200 rounded p-3 font-mono text-xs mb-2">
-                        <div className="font-bold text-blue-800 mb-1">Exemplo de formato correto:</div>
-                        <div className="text-gray-700">
-                          nome_jogador,colocacao<br/>
-                          Daniel Simonian,Campeão<br/>
-                          Fernanda Lima,Vice<br/>
-                          Carlos Silva,3º Lugar<br/>
-                          Juliana Costa,Quartas de Final
-                        </div>
-                      </div>
-                      <p className="font-semibold text-blue-800">
-                        💡 Colocações válidas: Campeão, Vice, 3º Lugar, Quartas de Final, Oitavas de Final, Participação
-                      </p>
-                      <p className="mt-2 font-semibold text-red-700">
-                        ⚠️ Os jogadores devem estar cadastrados no sistema antes de importar resultados!
+                    <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-amber-900">
+                      <h4 className="font-bold mb-2">🔄 Recálculo Automático</h4>
+                      <p>
+                        Ao importar resultados, o sistema <strong>recalcula automaticamente</strong> a 
+                        categoria de cada jogador com base na categoria onde ele mais jogou!
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Selecionar Torneio */}
                 <div className="mb-6">
                   <label className="block text-sm font-bold text-gray-700 mb-2">
                     🏆 Selecione o Torneio
@@ -616,12 +546,12 @@ Juliana Costa,Quartas de Final`;
                   <select
                     value={torneioSelecionado}
                     onChange={(e) => setTorneioSelecionado(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
-                    <option value="">Escolha um torneio...</option>
-                    {torneios.map((torneio) => (
-                      <option key={torneio.id} value={torneio.id}>
-                        {torneio.nome} - {new Date(torneio.data).toLocaleDateString('pt-BR')}
+                    <option value="">Escolha...</option>
+                    {torneios.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nome} - {new Date(t.data).toLocaleDateString('pt-BR')}
                       </option>
                     ))}
                   </select>
@@ -629,96 +559,62 @@ Juliana Costa,Quartas de Final`;
 
                 {torneioSelecionado && (
                   <>
-                    {/* Download Template */}
-                    <div className="flex gap-4 mb-6">
-                      <button
-                        onClick={downloadTemplateResultados}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                      >
-                        <Download className="w-4 h-4" />
-                        Baixar Template CSV
-                      </button>
-                    </div>
+                    <button
+                      onClick={downloadTemplateResultados}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mb-6 font-semibold"
+                    >
+                      <Download className="w-4 h-4" />
+                      Template CSV
+                    </button>
 
-                    {/* Texto */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        📝 Cole os resultados (CSV)
-                      </label>
-                      <textarea
-                        value={resultadosTexto}
-                        onChange={(e) => setResultadosTexto(e.target.value)}
-                        placeholder="Cole aqui os resultados no formato CSV..."
-                        className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
-                      />
-                      <button
-                        onClick={processarResultadosTexto}
-                        disabled={!resultadosTexto.trim() || loading}
-                        className="mt-3 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
-                      >
-                        {loading ? 'Processando...' : 'Processar Dados'}
-                      </button>
-                    </div>
+                    <textarea
+                      value={resultadosTexto}
+                      onChange={(e) => setResultadosTexto(e.target.value)}
+                      placeholder="Cole os resultados..."
+                      className="w-full h-40 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm mb-3"
+                    />
+                    <button
+                      onClick={processarResultadosTexto}
+                      disabled={!resultadosTexto.trim() || loading}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold disabled:opacity-50"
+                    >
+                      {loading ? 'Processando...' : 'Processar'}
+                    </button>
 
-                    {/* Preview */}
                     {resultadosPreview.length > 0 && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                          Preview: {resultadosPreview.length} resultado(s) encontrado(s)
-                        </h3>
-
+                      <div className="bg-gray-50 border rounded-lg p-4 mt-6">
+                        <h3 className="font-bold mb-4">Preview: {resultadosPreview.length} resultado(s)</h3>
                         <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
-                          {resultadosPreview.map((resultado, index) => (
-                            <div
-                              key={index}
-                              className={`p-3 rounded-lg ${
-                                resultado.status === 'erro'
-                                  ? 'bg-red-50 border border-red-200'
-                                  : 'bg-white border border-gray-200'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="font-semibold text-gray-900">
-                                    {resultado.nome_jogador}
-                                  </div>
-                                  <div className="text-sm text-gray-600">
-                                    {resultado.colocacao} • {resultado.pontos} pontos
-                                  </div>
-                                </div>
+                          {resultadosPreview.map((r, i) => (
+                            <div key={i} className={`p-3 rounded-lg ${r.status === 'erro' ? 'bg-red-50' : 'bg-white'}`}>
+                              <div className="flex justify-between">
                                 <div>
-                                  {resultado.status === 'erro' ? (
-                                    <span className="text-red-600 text-sm font-semibold flex items-center gap-1">
-                                      <AlertCircle className="w-4 h-4" />
-                                      {resultado.erro}
-                                    </span>
-                                  ) : (
-                                    <span className="text-green-600 text-sm font-semibold flex items-center gap-1">
-                                      <CheckCircle className="w-4 h-4" />
-                                      OK
-                                    </span>
-                                  )}
+                                  <div className="font-semibold">{r.nome_jogador}</div>
+                                  <div className="text-sm text-gray-600">{r.colocacao} • {r.pontos} pts</div>
                                 </div>
+                                {r.status === 'erro' ? (
+                                  <span className="text-red-600 text-sm">{r.erro}</span>
+                                ) : (
+                                  <CheckCircle className="w-5 h-5 text-green-600" />
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
-
                         <div className="flex justify-end gap-3">
                           <button
                             onClick={() => {
                               setResultadosPreview([]);
                               setResultadosTexto('');
                             }}
-                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
                           >
                             Cancelar
                           </button>
                           <button
                             onClick={importarResultados}
-                            disabled={importing || resultadosPreview.every(r => r.status === 'erro')}
-                            className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
+                            disabled={importing}
+                            className="flex items-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold disabled:opacity-50"
                           >
                             {importing ? (
                               <>
@@ -728,7 +624,7 @@ Juliana Costa,Quartas de Final`;
                             ) : (
                               <>
                                 <Upload className="w-4 h-4" />
-                                Importar {resultadosPreview.filter(r => r.status === 'ok').length} Resultado(s)
+                                Importar {resultadosPreview.filter(r => r.status === 'ok').length}
                               </>
                             )}
                           </button>
