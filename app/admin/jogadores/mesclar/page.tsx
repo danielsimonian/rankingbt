@@ -441,7 +441,7 @@ export default function MesclarJogadoresPage() {
 
                           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p className="text-sm text-blue-900">
-                              <strong>💡 Como funciona:</strong> Clique em "Manter este" no jogador que deseja preservar. 
+                              <strong>💡 Como funciona:</strong> Clique em &ldquo;Manter este&rdquo; no jogador que deseja preservar. 
                               Todos os resultados e torneios dos outros jogadores serão transferidos para ele, 
                               e os jogadores duplicados serão removidos.
                             </p>
