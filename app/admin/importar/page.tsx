@@ -127,31 +127,38 @@ export default function ImportarPage() {
     setJogadoresPreview(jogadores);
   };
 
-  const importarJogadores = async () => {
+const importarJogadores = async () => {
     setImporting(true);
 
     try {
       const jogadoresValidos = jogadoresPreview.filter(j => j.status !== 'erro');
+      let novos = 0;
+      let atualizados = 0;
       
       for (const jogador of jogadoresValidos) {
+        // Verifica se já existe (case-insensitive e ignora acentos)
         const { data: existente } = await supabase
           .from('jogadores')
           .select('id')
-          .eq('nome', jogador.nome)
+          .ilike('nome', jogador.nome)
           .single();
 
         if (existente) {
+          // ✅ Jogador já existe - APENAS atualiza dados de contato
+          // NÃO atualiza categoria (será recalculada automaticamente pelo trigger)
           await supabase
             .from('jogadores')
             .update({
-              email: jogador.email,
-              telefone: jogador.telefone,
-              cidade: jogador.cidade,
-              categoria: jogador.categoria,
+              email: jogador.email || null,
+              telefone: jogador.telefone || null,
+              cidade: jogador.cidade || null,
               genero: jogador.genero,
             })
             .eq('id', existente.id);
+          
+          atualizados++;
         } else {
+          // ✅ Jogador novo - cria com categoria inicial
           await supabase
             .from('jogadores')
             .insert({
@@ -159,15 +166,17 @@ export default function ImportarPage() {
               email: jogador.email,
               telefone: jogador.telefone,
               cidade: jogador.cidade,
-              categoria: jogador.categoria,
+              categoria: jogador.categoria, // Categoria inicial (será ajustada pelo trigger)
               genero: jogador.genero,
               pontos: 0,
               torneios_disputados: 0,
             });
+          
+          novos++;
         }
       }
 
-      alert(`✅ ${jogadoresValidos.length} jogador(es) importado(s) com sucesso!`);
+      alert(`✅ Importação concluída!\n\n📊 Novos: ${novos}\n🔄 Atualizados: ${atualizados}\n\n💡 Categoria será calculada automaticamente após adicionar resultados.`);
       setJogadoresPreview([]);
       setJogadoresTexto('');
       
@@ -216,8 +225,9 @@ export default function ImportarPage() {
         const colocacao = parts[1];
         const categoria = parts[2].toUpperCase() as Categoria;
 
+        // ✅ Busca case-insensitive
         const jogador = jogadores?.find(j => 
-          j.nome.toLowerCase() === nomeJogador.toLowerCase()
+          j.nome.toLowerCase().trim() === nomeJogador.toLowerCase().trim()
         );
 
         const resultado: ResultadoImport = {
@@ -229,7 +239,7 @@ export default function ImportarPage() {
 
         if (!jogador) {
           resultado.status = 'erro';
-          resultado.erro = 'Jogador não cadastrado';
+          resultado.erro = 'Jogador não cadastrado - importe primeiro na aba Jogadores';
         } else if (!['A', 'B', 'C', 'D', 'FUN'].includes(categoria)) {
           resultado.status = 'erro';
           resultado.erro = 'Categoria inválida';
