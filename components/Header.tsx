@@ -55,6 +55,13 @@ export default function Header() {
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
                 </Link>
                 <Link 
+                  href="/admin/jogadores/mesclar" 
+                  className="text-gray-700 hover:text-yellow-600 font-bold px-5 py-2.5 rounded-xl hover:bg-yellow-50 transition-all relative group"
+                >
+                  <span className="relative z-10">Mesclar</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-100 to-yellow-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+                </Link>
+                <Link 
                   href="/admin/torneios" 
                   className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
                 >

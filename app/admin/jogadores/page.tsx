@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, Search, Edit2, Trash2, User,
-  Filter, Trophy, History, Mail, Phone, MapPin
+  Filter, Trophy, History, Mail, Phone, MapPin, GitMerge
 } from 'lucide-react';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
@@ -127,19 +127,32 @@ export default function JogadoresPage() {
                   <p className="text-xs text-gray-500">{filteredJogadores.length} jogador(es)</p>
                 </div>
               </div>
-              <Link
+              <div className='flex gap-3'>
+                <Link
                 href="/admin/jogadores/novo"
                 className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
-              >
-                <Plus className="w-4 h-4" />
+                >
+                  <Plus className="w-4 h-4" />
                 Novo Jogador
-              </Link>
+                </Link>
+
+                <Link
+                href="/admin/jogadores/mesclar"
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+                >
+                  <GitMerge className="w-4 h-4" />
+                Mesclar Duplicatas
+                </Link>
+              </div>
+
+              
             </div>
           </div>
         </header>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
           {/* Filtros */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
