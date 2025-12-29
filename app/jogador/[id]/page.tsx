@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { Jogador, Categoria } from '@/types/database';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatarData, formatarDataExtenso } from '@/lib/utils/date';
 
 interface ResultadoTorneio {
   id: string;
@@ -286,10 +287,10 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
                             {resultado.torneio_nome}
                           </h4>
                           <div className="flex items-center gap-3 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(resultado.torneio_data).toLocaleDateString('pt-BR')}
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {formatarData(resultado.torneio_data)}
+                          </div>
                             <span>•</span>
                             <div className="flex items-center gap-1">
                               <MapPin className="w-4 h-4" />

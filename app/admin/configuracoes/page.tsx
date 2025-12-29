@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { verificarAdmin } from '@/lib/auth';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 
+
 interface Configuracao {
   id: string;
   nome: string;

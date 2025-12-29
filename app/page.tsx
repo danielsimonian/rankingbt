@@ -49,13 +49,13 @@ export default async function Home() {
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6 tracking-tight leading-tight">
-              <span className="block bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent drop-shadow-2xl">
-                Ranking BT
-              </span>
-            </h1>
-            <p className="text-2xl sm:text-3xl text-primary-300 mb-6 font-bold">
-              Baixada Santista
-            </p>
+<span className="block bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent drop-shadow-2xl leading-relaxed pb-1 mb-0">
+  Ranking BT
+</span>
+</h1>
+<p className="text-2xl sm:text-3xl text-primary-300 mb-6 font-bold -mt-8">
+  Baixada Santista
+</p>
             <p className="text-lg text-gray-300 mb-4 max-w-2xl mx-auto">
               Sistema Oficial de Rankings de Beach Tennis
             </p>

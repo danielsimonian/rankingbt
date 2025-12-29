@@ -17,7 +17,6 @@ import { Upload } from 'lucide-react';
 interface DashboardStats {
   totalJogadores: number;
   totalTorneios: number;
-  solicitacoesPendentes: number;
   jogadoresPorCategoria: {
     A: number;
     B: number;
@@ -44,7 +43,6 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalJogadores: 0,
     totalTorneios: 0,
-    solicitacoesPendentes: 0,
     jogadoresPorCategoria: { A: 0, B: 0, C: 0, D: 0, FUN: 0 },
   });
   const [jogadorDestaque, setJogadorDestaque] = useState<JogadorDestaque | null>(null);
@@ -70,10 +68,9 @@ export default function DashboardPage() {
       }
 
       // Buscar estatísticas
-      const [jogadores, torneios, solicitacoes] = await Promise.all([
+      const [jogadores, torneios] = await Promise.all([
         supabase.from('jogadores').select('categoria, nome, pontos, torneios_disputados', { count: 'exact' }),
         supabase.from('torneios').select('data', { count: 'exact' }),
-        supabase.from('solicitacoes_mudanca_categoria').select('*', { count: 'exact' }).eq('status', 'pendente'),
       ]);
 
       // Contar jogadores por categoria
@@ -114,7 +111,6 @@ export default function DashboardPage() {
       setStats({
         totalJogadores: jogadores.count || 0,
         totalTorneios: torneios.count || 0,
-        solicitacoesPendentes: solicitacoes.count || 0,
         jogadoresPorCategoria: porCategoria,
       });
 
@@ -145,7 +141,6 @@ export default function DashboardPage() {
 
   const menuItems = [
     { icon: Users, label: 'Jogadores', href: '/admin/jogadores', color: 'blue' },
-    { icon: AlertCircle, label: 'Solicitações', href: '/admin/solicitacoes', badge: stats.solicitacoesPendentes, color: 'orange' },
     { icon: Trophy, label: 'Torneios', href: '/admin/torneios', color: 'yellow' },
     { icon: FileText, label: 'Resultados', href: '/admin/resultados', color: 'green' },
     { icon: Upload, label: 'Importar Dados', href: '/admin/importar', color: 'indigo' }, // ✅ ADICIONE ESTA LINHA
@@ -190,13 +185,6 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-gray-900">{adminNome}</p>
                   <p className="text-xs text-gray-500">Administrador</p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sair</span>
-                </button>
               </div>
             </div>
           </div>
@@ -238,22 +226,6 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.totalTorneios}</h3>
               <p className="text-sm text-gray-600">Torneios Cadastrados</p>
-            </div>
-
-            {/* Solicitações Pendentes */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-orange-600" />
-                </div>
-                {stats.solicitacoesPendentes > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {stats.solicitacoesPendentes}
-                  </span>
-                )}
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-1">{stats.solicitacoesPendentes}</h3>
-              <p className="text-sm text-gray-600">Solicitações Pendentes</p>
             </div>
 
             {/* Categorias */}
@@ -372,11 +344,6 @@ export default function DashboardPage() {
                       <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
                         {item.label}
                       </h3>
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <span className="text-xs text-orange-600 font-medium">
-                          {item.badge} pendente{item.badge > 1 ? 's' : ''}
-                        </span>
-                      )}
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />

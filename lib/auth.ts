@@ -1,86 +1,109 @@
 import { supabase } from './supabase';
 
-/**
- * Fazer login
- */
-export async function login(email: string, password: string) {
+export async function signIn(email: string, password: string) {
   console.log('🔐 Tentando login com:', email);
   
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    // 1. Login no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    console.error('❌ Erro no login do Supabase:', error);
-    return { success: false, error: error.message };
+    if (authError) {
+      console.error('❌ Erro no login Supabase:', authError);
+      throw authError;
+    }
+
+    console.log('✅ Login no Supabase OK, user_id:', authData.user?.id);
+
+    // 2. Verificar se é admin
+    const { data: adminData, error: adminError } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('user_id', authData.user?.id)
+      .eq('ativo', true)
+      .single();
+
+    console.log('📊 Verificando admin...');
+    console.log('Admin data:', adminData);
+    console.log('Admin error:', adminError);
+
+    if (adminError || !adminData) {
+      console.error('❌ Usuário não é admin');
+      throw new Error('Acesso negado. Apenas administradores podem acessar.');
+    }
+
+    console.log('✅ Admin autorizado:', email);
+
+    // 3. ⚡ SALVAR NO LOCALSTORAGE ⚡
+    localStorage.setItem('isAdmin', 'true');
+    localStorage.setItem('adminEmail', email);
+    localStorage.setItem('adminNome', adminData.nome);
+    console.log('💾 Salvou no localStorage:', localStorage.getItem('isAdmin'));
+
+    return { success: true, user: authData.user };
+  } catch (error: any) {
+    console.error('❌ Erro completo:', error);
+    throw error;
   }
-
-  console.log('✅ Login no Supabase OK, user_id:', data.user?.id);
-
-  // Verificar se é admin
-  const { data: adminData, error: adminError } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('user_id', data.user.id)
-    .eq('ativo', true)
-    .single();
-
-  console.log('📊 Verificando admin...');
-  console.log('Admin data:', adminData);
-  console.log('Admin error:', adminError);
-
-  if (adminError || !adminData) {
-    console.error('❌ Não é admin ou não está ativo');
-    // Fazer logout se não for admin
-    await supabase.auth.signOut();
-    return { success: false, error: 'Usuário não autorizado' };
-  }
-
-  console.log('✅ Admin autorizado:', adminData.email);
-  return { success: true, user: data.user, admin: adminData };
 }
 
-/**
- * Fazer logout
- */
-export async function logout() {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    return { success: false, error: error.message };
-  }
-  return { success: true };
+export async function signOut() {
+  console.log('🚪 Fazendo logout...');
+  
+  // 1. Logout do Supabase
+  await supabase.auth.signOut();
+  
+  // 2. Limpar localStorage
+  localStorage.removeItem('isAdmin');
+  localStorage.removeItem('adminEmail');
+  localStorage.removeItem('adminNome');
+  
+  console.log('✅ Logout completo');
 }
 
-/**
- * Verificar se está logado e é admin
- */
+// Aliases para compatibilidade
+export const login = signIn;
+export const logout = signOut;
+
 export async function verificarAdmin() {
-  const { data: { user }, error } = await supabase.auth.getUser();
+  try {
+    // 1. Verificar localStorage primeiro (mais rápido)
+    const isAdminLocal = localStorage.getItem('isAdmin') === 'true';
+    if (!isAdminLocal) {
+      console.log('❌ Não está marcado como admin no localStorage');
+      return { isAdmin: false };
+    }
 
-  if (error || !user) {
-    return { isAdmin: false, user: null };
+    // 2. Verificar sessão no Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.log('❌ Sem sessão ativa no Supabase');
+      localStorage.removeItem('isAdmin');
+      return { isAdmin: false };
+    }
+
+    // 3. Verificar se ainda é admin no banco
+    const { data: adminData, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('ativo', true)
+      .single();
+
+    if (error || !adminData) {
+      console.log('❌ Não é mais admin no banco');
+      localStorage.removeItem('isAdmin');
+      return { isAdmin: false };
+    }
+
+    console.log('✅ Admin verificado:', adminData.email);
+    return { isAdmin: true, admin: adminData };
+  } catch (error) {
+    console.error('❌ Erro ao verificar admin:', error);
+    localStorage.removeItem('isAdmin');
+    return { isAdmin: false };
   }
-
-  // Verificar se é admin ativo
-  const { data: adminData, error: adminError } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('ativo', true)
-    .single();
-
-  if (adminError || !adminData) {
-    return { isAdmin: false, user: null };
-  }
-
-  return { isAdmin: true, user, admin: adminData };
-}
-
-/**
- * Pegar sessão atual
- */
-export async function getSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
 }
