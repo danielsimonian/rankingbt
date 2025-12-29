@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login } from '@/lib/auth';
-import { Lock, Mail, AlertCircle, Trophy } from 'lucide-react';
+import { Lock, Mail, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,58 +14,50 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    setError('');
 
-    const result = await login(email, password);
-
-    if (result.success) {
-      router.push('/admin/dashboard');
-    } else {
-      setError(result.error || 'Erro ao fazer login');
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        router.push('/admin/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erro ao fazer login');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-royal-900 via-gray-900 to-royal-900 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-royal-600/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="relative w-full max-w-md">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-2xl shadow-primary-500/50 mb-4">
-            <Trophy className="w-10 h-10 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-royal-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Painel Administrativo</h1>
+            <p className="text-gray-600">Ranking BT - Baixada Santista</p>
           </div>
-          <h1 className="text-3xl font-black text-white mb-2">
-            Painel Administrativo
-          </h1>
-          <p className="text-gray-400">Ranking BT - Baixada Santista</p>
-        </div>
 
-        {/* Login Form */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-white mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-white/30 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="seu@email.com"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="admin@exemplo.com"
                   required
                   disabled={loading}
                 />
@@ -74,19 +66,17 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-bold text-white mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Senha
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-white/30 rounded-lg bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   placeholder="••••••••"
                   required
                   disabled={loading}
@@ -96,9 +86,8 @@ export default function LoginPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-200">{error}</p>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
               </div>
             )}
 
@@ -106,27 +95,24 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 py-3 px-4 rounded-lg font-black hover:from-primary-400 hover:to-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary-500/30"
+              className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white py-3 rounded-lg font-bold hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
-            <a
-              href="/"
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              ← Voltar para o site
-            </a>
+          <div className="mt-6 text-center text-sm text-gray-500">
+            Acesso restrito a administradores
           </div>
         </div>
-
-        {/* Security Note */}
-        <p className="text-center text-xs text-gray-500 mt-6">
-          Acesso restrito apenas para administradores autorizados
-        </p>
       </div>
     </div>
   );
