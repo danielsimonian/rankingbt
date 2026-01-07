@@ -7,9 +7,12 @@ import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { getJogadorPorId, atualizarJogador } from '@/lib/api';
 import { Categoria, Genero, Jogador } from '@/types/database';
 import { phoneMask } from '@/lib/masks';
+import { criarOuAtualizarJogador } from '@/lib/jogadores-utils';
+
 
 export default function EditarJogadorPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [jogador, setJogador] = useState<Jogador | null>(null);
   const [formData, setFormData] = useState({
@@ -21,6 +24,7 @@ export default function EditarJogadorPage({ params }: { params: { id: string } }
     genero: 'Masculino' as Genero,
   });
   const router = useRouter();
+  const { id } = params;
 
   useEffect(() => {
     loadJogador();
@@ -47,33 +51,40 @@ export default function EditarJogadorPage({ params }: { params: { id: string } }
     setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.nome.trim()) {
-      alert('Nome é obrigatório!');
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setSaving(true);
+  setError('');
+
+  try {
+    // ✅ USA O UTILITÁRIO CENTRALIZADO
+    const resultado = await criarOuAtualizarJogador({
+      nome: formData.nome,
+      email: formData.email,
+      telefone: formData.telefone,
+      cidade: formData.cidade,
+      categoria: formData.categoria,
+      genero: formData.genero,
+      idExistente: id, // ← PASSA O ID PARA EDIÇÃO
+    });
+
+    if (!resultado.success) {
+      setError(resultado.error || 'Erro ao atualizar jogador');
+      setSaving(false);
       return;
     }
 
-    setSaving(true);
+    alert('✅ Jogador atualizado com sucesso!');
+    router.push('/admin/jogadores');
+  } catch (error: any) {
+    setError(error.message);
+    setSaving(false);
+  }
+};
 
-    const result = await atualizarJogador(params.id, {
-      nome: formData.nome.trim(),
-      email: formData.email.trim() || undefined,
-      telefone: formData.telefone.trim() || undefined,
-      cidade: formData.cidade.trim() || undefined,
-      categoria: formData.categoria,
-      genero: formData.genero,
-    });
-
-    if (result.success) {
-      alert('Jogador atualizado com sucesso!');
-      router.push('/admin/jogadores');
-    } else {
-      alert(`Erro ao atualizar: ${result.error}`);
-      setSaving(false);
-    }
-  };
+// ⚠️ NÃO ESQUEÇA DE ADICIONAR O IMPORT NO TOPO DO ARQUIVO:
+// import { criarOuAtualizarJogador } from '@/lib/jogadores-utils';
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

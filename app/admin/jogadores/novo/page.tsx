@@ -8,8 +8,11 @@ import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { criarJogador } from '@/lib/api';
 import { Categoria, Genero } from '@/types/database';
 import { phoneMask } from '@/lib/masks';
+import { criarOuAtualizarJogador } from '@/lib/jogadores-utils';
 
 export default function NovoJogadorPage() {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: '',
@@ -21,33 +24,35 @@ export default function NovoJogadorPage() {
   });
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.nome.trim()) {
-      alert('Nome é obrigatório!');
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setSaving(true);
+  setError('');
 
-    setLoading(true);
-
-    const result = await criarJogador({
-      nome: formData.nome.trim(),
-      email: formData.email.trim() || undefined,
-      telefone: formData.telefone.trim() || undefined,
-      cidade: formData.cidade.trim() || undefined,
+  try {
+    const resultado = await criarOuAtualizarJogador({
+      nome: formData.nome,
+      email: formData.email,
+      telefone: formData.telefone,
+      cidade: formData.cidade,
       categoria: formData.categoria,
       genero: formData.genero,
     });
 
-    if (result.success) {
-      alert('Jogador criado com sucesso!');
-      router.push('/admin/jogadores');
-    } else {
-      alert(`Erro ao criar jogador: ${result.error}`);
-      setLoading(false);
+    if (!resultado.success) {
+      setError(resultado.error || 'Erro ao criar jogador');
+      setSaving(false);
+      return;
     }
-  };
+
+    alert('✅ Jogador cadastrado com sucesso!');
+    router.push('/admin/jogadores');
+  } catch (error: any) {
+    setError(error.message);
+    setSaving(false);
+  }
+};
+
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -232,6 +237,25 @@ export default function NovoJogadorPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Mensagem de Erro */}
+              {error && (
+                <div className="px-6 pb-6">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                          <span className="text-white text-sm">⚠️</span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-red-900">
+                        <p className="font-semibold mb-1">Erro ao salvar:</p>
+                        <p>{error}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Footer - Ações */}
               <div className="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-200">

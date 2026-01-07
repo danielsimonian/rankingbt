@@ -11,6 +11,7 @@ import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { Categoria, Genero } from '@/types/database';
+import { normalizarNome, verificarJogadorDuplicado } from '@/lib/jogadores-utils';
 
 interface JogadorImport {
   nome: string;
@@ -128,64 +129,87 @@ export default function ImportarPage() {
   };
 
 const importarJogadores = async () => {
-    setImporting(true);
+  setImporting(true);
 
-    try {
-      const jogadoresValidos = jogadoresPreview.filter(j => j.status !== 'erro');
-      let novos = 0;
-      let atualizados = 0;
-      
-      for (const jogador of jogadoresValidos) {
-        // Verifica se já existe (case-insensitive e ignora acentos)
-        const { data: existente } = await supabase
+  try {
+    const jogadoresValidos = jogadoresPreview.filter(j => j.status !== 'erro');
+    let novos = 0;
+    let atualizados = 0;
+    let ignorados = 0;
+    
+    for (const jogador of jogadoresValidos) {
+      // ✅ USA O UTILITÁRIO CENTRALIZADO
+      const duplicado = await verificarJogadorDuplicado(jogador.nome);
+
+      if (duplicado) {
+        // ✅ JOGADOR JÁ EXISTE - Atualiza dados de contato
+        console.log('✅ JÁ EXISTE:', duplicado.nome, '(ID:', duplicado.id, ')');
+        
+        const { error } = await supabase
           .from('jogadores')
-          .select('id')
-          .ilike('nome', jogador.nome)
+          .update({
+            email: jogador.email || null,
+            telefone: jogador.telefone || null,
+            cidade: jogador.cidade || null,
+            genero: jogador.genero,
+          })
+          .eq('id', duplicado.id);
+
+        if (error) {
+          console.error('❌ Erro ao atualizar:', error);
+          ignorados++;
+        } else {
+          atualizados++;
+        }
+      } else {
+        // ✅ JOGADOR NOVO - Cria
+        console.log('🆕 CRIANDO NOVO:', jogador.nome);
+        
+        const { data: novoJogador, error } = await supabase
+          .from('jogadores')
+          .insert({
+            nome: jogador.nome.trim(),
+            email: jogador.email,
+            telefone: jogador.telefone,
+            cidade: jogador.cidade,
+            categoria: jogador.categoria,
+            genero: jogador.genero,
+            pontos: 0,
+            torneios_disputados: 0,
+          })
+          .select('id, nome')
           .single();
 
-        if (existente) {
-          // ✅ Jogador já existe - APENAS atualiza dados de contato
-          // NÃO atualiza categoria (será recalculada automaticamente pelo trigger)
-          await supabase
-            .from('jogadores')
-            .update({
-              email: jogador.email || null,
-              telefone: jogador.telefone || null,
-              cidade: jogador.cidade || null,
-              genero: jogador.genero,
-            })
-            .eq('id', existente.id);
-          
-          atualizados++;
+        if (error) {
+          console.error('❌ Erro ao criar:', error);
+          ignorados++;
         } else {
-          // ✅ Jogador novo - cria com categoria inicial
-          await supabase
-            .from('jogadores')
-            .insert({
-              nome: jogador.nome,
-              email: jogador.email,
-              telefone: jogador.telefone,
-              cidade: jogador.cidade,
-              categoria: jogador.categoria, // Categoria inicial (será ajustada pelo trigger)
-              genero: jogador.genero,
-              pontos: 0,
-              torneios_disputados: 0,
-            });
-          
           novos++;
+          console.log('✅ CRIADO:', novoJogador?.nome, '(ID:', novoJogador?.id, ')');
         }
       }
-
-      alert(`✅ Importação concluída!\n\n📊 Novos: ${novos}\n🔄 Atualizados: ${atualizados}\n\n💡 Categoria será calculada automaticamente após adicionar resultados.`);
-      setJogadoresPreview([]);
-      setJogadoresTexto('');
-      
-    } catch (error: any) {
-      alert(`Erro ao importar: ${error.message}`);
     }
 
-    setImporting(false);
-  };
+    const mensagem = `✅ Importação concluída!
+
+📊 Novos: ${novos}
+🔄 Atualizados: ${atualizados}
+${ignorados > 0 ? `⚠️ Com erro: ${ignorados}` : ''}
+
+💡 Categoria será calculada automaticamente após adicionar resultados.`;
+
+    console.log('📋 RESUMO:', { novos, atualizados, ignorados });
+    alert(mensagem);
+    setJogadoresPreview([]);
+    setJogadoresTexto('');
+    
+  } catch (error: any) {
+    console.error('❌ ERRO GERAL:', error);
+    alert(`❌ Erro ao importar: ${error.message}`);
+  }
+
+  setImporting(false);
+};
 
   // ==================== RESULTADOS ====================
 
