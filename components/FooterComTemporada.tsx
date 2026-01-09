@@ -1,21 +1,26 @@
+// components/FooterComTemporada.tsx
 'use client';
 
 import { useState } from 'react';
-import { Trophy, Mail, MapPin, Calendar, ChevronDown, X } from 'lucide-react';
-import Link from 'next/link';
 import { useTemporada } from '@/contexts/TemporadaContext';
+import { Calendar, ChevronDown, X, Trophy } from 'lucide-react';
 
-export default function Footer() {
+export default function FooterComTemporada() {
   const { temporadaAtual, temporadas, selecionarTemporada } = useTemporada();
   const [modalAberto, setModalAberto] = useState(false);
 
   return (
     <>
-      <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-t border-gray-700 mt-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-          
-          {/* Seletor de Temporada - DESTAQUE NO TOPO */}
-          <div className="flex flex-col items-center justify-center mb-12 pb-12 border-b border-gray-700">
+      <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-12 relative overflow-hidden">
+        {/* Background decorativo */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-primary-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Seletor de Temporada */}
+          <div className="flex flex-col items-center justify-center mb-8">
             <button
               onClick={() => setModalAberto(true)}
               className="flex items-center gap-3 px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl border border-white/20 transition-all group"
@@ -42,88 +47,20 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Grid de Conteúdo */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            
-            {/* Brand */}
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary-500 to-blue-600 rounded-xl shadow-lg">
-                  <Trophy className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <span className="font-black text-xl bg-gradient-to-r from-primary-400 to-blue-400 bg-clip-text text-transparent">
-                    Ranking BT
-                  </span>
-                  <div className="text-xs text-gray-400 font-medium">Baixada Santista</div>
-                </div>
-              </div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                Sistema oficial de ranking de Beach Tennis da Baixada Santista. 
-                Acompanhe sua evolução, participe de torneios homologados e conquiste sua posição.
-              </p>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
-                <MapPin className="w-4 h-4 text-primary-400" />
-                <span>Santos, SP</span>
-              </div>
-            </div>
+          {/* Divider */}
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-8"></div>
 
-            {/* Links Rápidos */}
-            <div>
-              <h3 className="font-bold text-white mb-6 text-lg">Links Rápidos</h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link href="/rankings" className="text-gray-400 hover:text-primary-400 text-sm transition-colors flex items-center gap-2 group">
-                    <span className="w-1 h-1 bg-primary-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                    Rankings
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/como-funciona" className="text-gray-400 hover:text-primary-400 text-sm transition-colors flex items-center gap-2 group">
-                    <span className="w-1 h-1 bg-primary-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                    Como Funciona
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/torneios" className="text-gray-400 hover:text-primary-400 text-sm transition-colors flex items-center gap-2 group">
-                    <span className="w-1 h-1 bg-primary-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                    Torneios
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Contato */}
-            <div>
-              <h3 className="font-bold text-white mb-6 text-lg">Contato</h3>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-gray-400 text-sm mb-3 leading-relaxed">
-                    Para organizadores interessados em homologar torneios
-                  </p>
-                  <a 
-                    href="mailto:contato@rankingbt.com.br" 
-                    className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 text-sm font-semibold transition-colors group"
-                  >
-                    <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    contato@rankingbt.com.br
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Bottom */}
-          <div className="pt-8 border-t border-gray-700">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-gray-500 text-sm">
-                © {new Date().getFullYear()} Ranking BT - Baixada Santista. Todos os direitos reservados.
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-500">Sistema ativo</span>
-              </div>
-            </div>
+          {/* Info do Sistema */}
+          <div className="text-center space-y-2">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-blue-400 bg-clip-text text-transparent">
+              Ranking Beach Tennis
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Baixada Santista • Sistema RBT100
+            </p>
+            <p className="text-gray-500 text-xs">
+              © {new Date().getFullYear()} - Todos os direitos reservados
+            </p>
           </div>
         </div>
       </footer>

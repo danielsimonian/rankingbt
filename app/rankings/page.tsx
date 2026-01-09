@@ -1,24 +1,73 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, TrendingUp, Award, Download } from 'lucide-react';
+import { Trophy, TrendingUp, Award, Download, Calendar, Archive } from 'lucide-react';
 import { getJogadores, calcularPosicoes } from '@/lib/api';
+import { getRankingTemporada } from '@/lib/api/temporadas';
+import { useTemporada } from '@/contexts/TemporadaContext';
 import { exportarRankingPDF } from '@/lib/pdf';
 import { Jogador, Categoria, Genero } from '@/types/database';
 
 export default function RankingsPage() {
+  const { temporadaAtual } = useTemporada();
   const [jogadores, setJogadores] = useState<Jogador[]>([]);
   const [categoriaFilter, setCategoriaFilter] = useState<Categoria | 'TODAS'>('TODAS');
   const [generoFilter, setGeneroFilter] = useState<Genero | 'TODOS'>('TODOS');
   const [loading, setLoading] = useState(true);
 
+  // 🎲 Definir categoria e gênero aleatórios na primeira carga
+  useEffect(() => {
+    const categorias: Categoria[] = ['A', 'B', 'C', 'D', 'FUN'];
+    const generos: Genero[] = ['Masculino', 'Feminino'];
+    
+    const categoriaAleatoria = categorias[Math.floor(Math.random() * categorias.length)];
+    const generoAleatorio = generos[Math.floor(Math.random() * generos.length)];
+    
+    setCategoriaFilter(categoriaAleatoria);
+    setGeneroFilter(generoAleatorio);
+  }, []); // Roda apenas uma vez ao montar
+
   useEffect(() => {
     loadJogadores();
-  }, []);
+  }, [temporadaAtual]);
 
   const loadJogadores = async () => {
-    const data = await getJogadores();
-    setJogadores(data);
+    if (!temporadaAtual) return;
+    
+    setLoading(true);
+
+    try {
+      if (temporadaAtual.ativa) {
+        // Temporada ativa: busca ranking atual (tabela jogadores)
+        const data = await getJogadores();
+        setJogadores(data);
+      } else {
+        // Temporada encerrada: busca snapshot (tabela rankings_temporada)
+        const rankingSnapshot = await getRankingTemporada(temporadaAtual.id);
+        
+        // Transformar formato para compatibilidade
+        const jogadoresFormatados = rankingSnapshot.map((r: any) => ({
+          id: r.jogador_id,
+          nome: r.jogador?.nome || 'Jogador',
+          categoria: r.categoria as Categoria,
+          genero: r.genero as Genero,
+          pontos: r.pontos,
+          torneios_disputados: r.torneios_disputados,
+          email: r.jogador?.email,
+          telefone: r.jogador?.telefone,
+          cidade: r.jogador?.cidade,
+          posicao: r.posicao,
+          created_at: r.created_at || new Date().toISOString(),
+          updated_at: r.created_at || new Date().toISOString(),
+        }));
+        
+        setJogadores(jogadoresFormatados);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar jogadores:', error);
+      setJogadores([]);
+    }
+
     setLoading(false);
   };
 
@@ -26,7 +75,8 @@ export default function RankingsPage() {
   const jogadoresFiltrados = jogadores.filter(jogador => {
     const matchCategoria = categoriaFilter === 'TODAS' || jogador.categoria === categoriaFilter;
     const matchGenero = generoFilter === 'TODOS' || jogador.genero === generoFilter;
-    return matchCategoria && matchGenero;
+    const temPontos = jogador.pontos > 0; // ✅ Apenas jogadores com pontos
+    return matchCategoria && matchGenero && temPontos;
   });
 
   // Calcular posições
@@ -57,6 +107,23 @@ export default function RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Badge de Temporada */}
+        {temporadaAtual && !temporadaAtual.ativa && (
+          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Archive className="w-5 h-5 text-orange-600" />
+              <div>
+                <p className="font-semibold text-orange-900">
+                  📁 Visualizando Temporada Encerrada: {temporadaAtual.nome}
+                </p>
+                <p className="text-sm text-orange-700">
+                  Este é o ranking final preservado desta temporada.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-2.5 rounded-full mb-6 font-black text-sm shadow-xl shadow-primary-500/30">
@@ -72,6 +139,19 @@ export default function RankingsPage() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
             Classificação baseada nos 10 melhores resultados dos últimos 12 meses
           </p>
+          {temporadaAtual && (
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-600">
+                {temporadaAtual.nome}
+                {temporadaAtual.ativa && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
+                    🟢 Ativa
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Filtros */}
@@ -83,16 +163,6 @@ export default function RankingsPage() {
                 Filtrar por Categoria
               </label>
               <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => setCategoriaFilter('TODAS')}
-                  className={`px-4 py-3 rounded-lg font-bold transition-all ${
-                    categoriaFilter === 'TODAS'
-                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Todas
-                </button>
                 {(['A', 'B', 'C', 'D', 'FUN'] as Categoria[]).map((cat) => (
                   <button
                     key={cat}
@@ -118,17 +188,7 @@ export default function RankingsPage() {
               <label className="block text-sm font-bold text-gray-700 mb-3">
                 Filtrar por Gênero
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => setGeneroFilter('TODOS')}
-                  className={`px-4 py-3 rounded-lg font-bold transition-all ${
-                    generoFilter === 'TODOS'
-                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Todos
-                </button>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setGeneroFilter('Masculino')}
                   className={`px-4 py-3 rounded-lg font-bold transition-all ${
@@ -154,19 +214,37 @@ export default function RankingsPage() {
           </div>
         </div>
 
-        {/* Header da Tabela com Botão Exportar */}
+        {/* Header da Tabela com Botões */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
             Ranking {categoriaFilter === 'TODAS' ? 'Geral' : `Categoria ${categoriaFilter}`}
             {generoFilter !== 'TODOS' && ` - ${generoFilter}`}
           </h2>
-          <button
-            onClick={handleExportarPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold shadow-lg hover:shadow-xl"
-          >
-            <Download className="w-4 h-4" />
-            Exportar PDF
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Botão Ver Ranking Detalhado */}
+            {categoriaFilter !== 'TODAS' && generoFilter !== 'TODOS' && (
+              <button
+                onClick={() => {
+                  const categoriaUrl = categoriaFilter.toLowerCase();
+                  const generoUrl = generoFilter.toLowerCase();
+                  window.location.href = `/ranking/${categoriaUrl}/${generoUrl}`;
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-lg hover:shadow-xl"
+              >
+                <Trophy className="w-4 h-4" />
+                Ver Ranking Detalhado
+              </button>
+            )}
+            
+            {/* Botão Exportar PDF */}
+            <button
+              onClick={handleExportarPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold shadow-lg hover:shadow-xl"
+            >
+              <Download className="w-4 h-4" />
+              Exportar PDF
+            </button>
+          </div>
         </div>
 
         {/* Tabela de Rankings */}
@@ -177,7 +255,10 @@ export default function RankingsPage() {
               Nenhum jogador encontrado
             </h3>
             <p className="text-gray-600">
-              Tente ajustar os filtros de categoria ou gênero
+              {temporadaAtual?.ativa 
+                ? 'Tente ajustar os filtros de categoria ou gênero'
+                : 'Esta temporada não possui jogadores nesta categoria/gênero'
+              }
             </p>
           </div>
         ) : (
@@ -318,13 +399,26 @@ export default function RankingsPage() {
               </div>
             </div>
             <div>
-              <h3 className="font-bold text-blue-900 mb-2">Como funciona o sistema Top 10?</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Apenas os <strong>10 melhores resultados</strong> dos últimos 12 meses contam para o ranking</li>
-                <li>• Resultados mais antigos que 12 meses são automaticamente descartados</li>
-                <li>• Sistema justo que valoriza consistência e performance recente</li>
-                <li>• Padrão internacional ITF (International Tennis Federation)</li>
-              </ul>
+              <h3 className="font-bold text-blue-900 mb-2">
+                {temporadaAtual?.ativa 
+                  ? 'Como funciona o sistema Top 10?' 
+                  : 'Ranking Histórico - Temporada Encerrada'
+                }
+              </h3>
+              {temporadaAtual?.ativa ? (
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Apenas os <strong>10 melhores resultados</strong> dos últimos 12 meses contam para o ranking</li>
+                  <li>• Resultados mais antigos que 12 meses são automaticamente descartados</li>
+                  <li>• Sistema justo que valoriza consistência e performance recente</li>
+                  <li>• Padrão internacional ITF (International Tennis Federation)</li>
+                </ul>
+              ) : (
+                <p className="text-sm text-blue-800">
+                  Este é o ranking final da <strong>{temporadaAtual?.nome}</strong>. 
+                  Os dados estão preservados como histórico e não são mais atualizados. 
+                  Para ver o ranking atual, selecione a temporada ativa no rodapé da página.
+                </p>
+              )}
             </div>
           </div>
         </div>

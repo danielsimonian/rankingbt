@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Trophy, Menu, X, LogOut } from 'lucide-react';
+import { Trophy, Menu, X, LogOut, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -89,10 +89,19 @@ export default function Header() {
                   <span className="relative z-10">Configurações</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
                 </Link>
+                <Link 
+                  href="/admin/temporadas" 
+                  className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
+                >
+                  <span className="relative z-10">Temporadas</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+                </Link>
+ 
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
+                  
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Sair</span>
                 </button>
