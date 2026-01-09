@@ -336,6 +336,8 @@ export default function TemporadasAdminPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50">
+        <AdminHeader />
+
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -609,7 +611,7 @@ export default function TemporadasAdminPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900">
                   💡 <strong>Dica:</strong> A nova temporada será criada como inativa. 
-                  Você pode ativá-la depois usando o botão "Ativar".
+                  Você pode ativá-la depois usando o botão &quot;Ativar&quot;.
                 </p>
               </div>
             </div>
