@@ -281,7 +281,7 @@ export default async function Home() {
             <div>
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 px-5 py-2.5 rounded-full mb-4 font-bold text-sm border-2 border-emerald-200/50 shadow-lg">
                 <Calendar className="w-4 h-4" />
-                Calendário 2025
+                Calendário 2026
               </div>
               <h2 className="text-4xl font-black bg-gradient-to-r from-gray-900 via-royal-900 to-gray-900 bg-clip-text text-transparent">
                 Próximos Torneios
