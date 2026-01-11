@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Trophy, TrendingUp, Users, Calendar, Award, ArrowRight, Sparkles, Target, Zap } from 'lucide-react';
+import { Trophy, TrendingUp, Users, Calendar, Award, ArrowRight, Sparkles, Target, Zap, ExternalLink } from 'lucide-react';
 import PlayerSearch from '@/components/PlayerSearch';
 import { getJogadores, getTorneios, calcularPosicoes } from '@/lib/api';
 
@@ -11,7 +11,12 @@ export default async function Home() {
   
   const top5Geral = calcularPosicoes(jogadores).slice(0, 5);
   const proximosTorneios = torneios
-    .filter(t => t.status === 'confirmado')
+    .filter(t => {
+      const dataFim = new Date(t.data_fim || t.data);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      return dataFim >= hoje && t.status === 'confirmado';
+    })
     .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
     .slice(0, 3);
 
@@ -49,15 +54,13 @@ export default async function Home() {
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6 tracking-tight leading-tight">
-<span className="block bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent drop-shadow-2xl leading-relaxed pb-1 mb-0">
-  Ranking BT
-</span>
-</h1>
-<p className="text-2xl sm:text-3xl text-primary-300 mb-6 font-bold -mt-8">
-  Baixada Santista
-</p>
-            <p className="text-lg text-gray-300 mb-4 max-w-2xl mx-auto">
-              Sistema Oficial de Rankings de Beach Tennis
+              Ranking Oficial de
+              <span className="block bg-gradient-to-r from-primary-400 via-primary-300 to-primary-400 bg-clip-text text-transparent mt-3 drop-shadow-2xl">
+                Beach Tennis
+              </span>
+            </h1>
+            <p className="text-2xl sm:text-3xl text-primary-300 mb-6 font-bold">
+              Baixada Santista
             </p>
             <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
               Acompanhe o ranking oficial, torneios homologados e os melhores atletas da região em tempo real.
@@ -281,7 +284,7 @@ export default async function Home() {
             <div>
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 px-5 py-2.5 rounded-full mb-4 font-bold text-sm border-2 border-emerald-200/50 shadow-lg">
                 <Calendar className="w-4 h-4" />
-                Calendário 2026
+                Calendário 2025
               </div>
               <h2 className="text-4xl font-black bg-gradient-to-r from-gray-900 via-royal-900 to-gray-900 bg-clip-text text-transparent">
                 Próximos Torneios
@@ -325,12 +328,56 @@ export default async function Home() {
                       <div className="flex items-center justify-center w-11 h-11 bg-gradient-to-br from-royal-100 to-royal-200 rounded-xl shadow-md">
                         <Calendar className="w-5 h-5 text-royal-700" />
                       </div>
-                      <div className="text-sm font-bold">
-                        {new Date(torneio.data).toLocaleDateString('pt-BR', { 
-                          day: '2-digit', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
+                      <div className="flex-1">
+                        <div className="text-sm font-bold">
+                          {(() => {
+                            const dataInicio = new Date(torneio.data);
+                            const dataFim = new Date(torneio.data_fim || torneio.data);
+                            const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                            
+                            if (torneio.data === torneio.data_fim || !torneio.data_fim) {
+                              // Torneio de 1 dia
+                              return dataInicio.toLocaleDateString('pt-BR', { 
+                                day: '2-digit', 
+                                month: 'long', 
+                                year: 'numeric' 
+                              });
+                            } else {
+                              // Torneio multi-dia
+                              const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
+                              if (mesmoMes) {
+                                return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}`;
+                              } else {
+                                return `${dataInicio.toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                })} a ${dataFim.toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: 'long',
+                                  year: 'numeric',
+                                })}`;
+                              }
+                            }
+                          })()}
+                        </div>
+                        {(() => {
+                          const dataInicio = new Date(torneio.data);
+                          const dataFim = new Date(torneio.data_fim || torneio.data);
+                          const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                          
+                          if (diasDuracao > 1) {
+                            return (
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                ({diasDuracao} dias)
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 text-gray-700">
@@ -340,6 +387,19 @@ export default async function Home() {
                       <div className="text-sm font-bold">{torneio.local}</div>
                     </div>
                   </div>
+                  
+                  {/* Link LetzPlay */}
+                  {torneio.link_letzplay && (
+                    <a
+                      href={torneio.link_letzplay}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all font-bold shadow-lg hover:shadow-xl group/btn"
+                    >
+                      <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                      Ver no LetzPlay
+                    </a>
+                  )}
                   
                   {/* Premium Badge */}
                   <div className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-full text-xs font-black shadow-lg">
@@ -384,9 +444,9 @@ export default async function Home() {
             </span>
           </div>
           
-<h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight">
-  <span className="bg-gradient-to-r from-primary-300 via-primary-200 to-primary-300 bg-clip-text text-transparent">Ranking BT</span> - Baixada Santista
-</h2>
+          <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight">
+            Acompanhe a <span className="bg-gradient-to-r from-primary-300 via-primary-200 to-primary-300 bg-clip-text text-transparent">Elite</span> do Beach Tennis
+          </h2>
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
             Rankings oficiais atualizados em tempo real. Torneios homologados. Sistema profissional de pontuação.
           </p>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, Calendar, MapPin, Trophy, Edit2, Trash2,
-  CheckCircle, Clock, Play, Filter
+  CheckCircle, Clock, Play, Filter, ExternalLink
 } from 'lucide-react';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
@@ -63,6 +63,40 @@ export default function TorneiosPage() {
       'realizado': { color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle, label: 'Realizado' },
     };
     return badges[status];
+  };
+
+  const formatarPeriodo = (dataInicio: string, dataFim?: string | null) => {
+    const inicio = new Date(dataInicio);
+    const fim = dataFim ? new Date(dataFim) : inicio;
+    const diasDuracao = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (dataInicio === dataFim || !dataFim) {
+      // Torneio de 1 dia
+      return inicio.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    } else {
+      // Torneio multi-dia
+      const mesmoMes = inicio.getMonth() === fim.getMonth();
+      if (mesmoMes) {
+        return `${inicio.getDate()} a ${fim.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })} (${diasDuracao} dias)`;
+      } else {
+        return `${inicio.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'short',
+        })} a ${fim.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })} (${diasDuracao} dias)`;
+      }
+    }
   };
 
   const torneiosFiltrados = filtro === 'TODOS' 
@@ -222,33 +256,45 @@ export default function TorneiosPage() {
                       </h3>
 
                       <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 text-primary-600" />
-                          <span>
-                            {new Date(torneio.data).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
-                          </span>
+                        {/* Data com período */}
+                        <div className="flex items-start gap-2 text-sm text-gray-600">
+                          <Calendar className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
+                          <span>{formatarPeriodo(torneio.data, torneio.data_fim)}</span>
                         </div>
+                        
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <MapPin className="w-4 h-4 text-primary-600" />
                           <span>{torneio.local}</span>
                         </div>
+                        
                         <div className="text-sm text-gray-600">
                           <span className="font-semibold">{torneio.cidade}</span>
                         </div>
                       </div>
 
-                      {/* Pontuação Custom Badge */}
-                      {torneio.pontuacao_custom && (
-                        <div className="mb-4">
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {/* Pontuação Custom */}
+                        {torneio.pontuacao_custom && (
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
                             ⭐ Pontuação Especial
                           </span>
-                        </div>
-                      )}
+                        )}
+                        
+                        {/* Link LetzPlay */}
+                        {torneio.link_letzplay && (
+                          <a
+                            href={torneio.link_letzplay}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold hover:bg-blue-200 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            LetzPlay
+                          </a>
+                        )}
+                      </div>
 
                       {/* Ações */}
                       <div className="flex gap-2 pt-4 border-t border-gray-200">

@@ -24,6 +24,7 @@ export interface Torneio {
   id: string;
   nome: string;
   data: string;
+  data_fim?: string | null;          // ← NOVO CAMPO
   local: string;
   cidade: string;
   status: 'confirmado' | 'em_andamento' | 'realizado';
@@ -35,6 +36,7 @@ export interface Torneio {
     oitavas: number;
     participacao: number;
   };
+  link_letzplay?: string | null;     // ← NOVO CAMPO
   config_pontuacao_id?: string;  // ✅ ADICIONE ESTA LINHA
   created_at?: string;
   updated_at?: string;

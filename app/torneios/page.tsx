@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Trophy, Calendar, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { Trophy, Calendar, MapPin, CheckCircle, Clock, ExternalLink, MessageCircle, Mail } from 'lucide-react';
 
 export const revalidate = 60;
 
@@ -14,13 +14,13 @@ export default async function TorneiosPage() {
   hoje.setHours(0, 0, 0, 0);
 
   const proximosTorneios = torneios?.filter(t => {
-    const dataTorneio = new Date(t.data);
-    return dataTorneio >= hoje && t.status === 'confirmado';
+    const dataFim = new Date(t.data_fim || t.data);
+    return dataFim >= hoje && t.status === 'confirmado';
   }) || [];
 
   const torneiosRealizados = torneios?.filter(t => {
-    const dataTorneio = new Date(t.data);
-    return dataTorneio < hoje || t.status === 'realizado';
+    const dataFim = new Date(t.data_fim || t.data);
+    return dataFim < hoje || t.status === 'realizado';
   }).reverse() || [];
 
   return (
@@ -75,13 +75,57 @@ export default async function TorneiosPage() {
                         <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-lg">
                           <Calendar className="w-5 h-5 text-primary-600" />
                         </div>
-                        <span className="font-semibold">
-                          {new Date(torneio.data).toLocaleDateString('pt-BR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </span>
+                        <div className="flex-1">
+                          <span className="font-semibold block">
+                            {(() => {
+                              const dataInicio = new Date(torneio.data);
+                              const dataFim = new Date(torneio.data_fim || torneio.data);
+                              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                              
+                              if (torneio.data === torneio.data_fim || !torneio.data_fim) {
+                                // Torneio de 1 dia
+                                return dataInicio.toLocaleDateString('pt-BR', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                });
+                              } else {
+                                // Torneio multi-dia
+                                const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
+                                if (mesmoMes) {
+                                  return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })}`;
+                                } else {
+                                  return `${dataInicio.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                  })} a ${dataFim.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })}`;
+                                }
+                              }
+                            })()}
+                          </span>
+                          {(() => {
+                            const dataInicio = new Date(torneio.data);
+                            const dataFim = new Date(torneio.data_fim || torneio.data);
+                            const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                            
+                            if (diasDuracao > 1) {
+                              return (
+                                <span className="text-xs text-gray-500">
+                                  ({diasDuracao} dias)
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-3 text-gray-700">
@@ -94,6 +138,19 @@ export default async function TorneiosPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Botão LetzPlay */}
+                    {torneio.link_letzplay && (
+                      <a
+                        href={torneio.link_letzplay}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all font-bold shadow-lg hover:shadow-xl group/btn"
+                      >
+                        <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        Ver no LetzPlay
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -115,7 +172,7 @@ export default async function TorneiosPage() {
                     key={torneio.id}
                     className="p-6 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-bold text-gray-900">
@@ -125,14 +182,42 @@ export default async function TorneiosPage() {
                             Realizado
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            {new Date(torneio.data).toLocaleDateString('pt-BR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            })}
+                            {(() => {
+                              const dataInicio = new Date(torneio.data);
+                              const dataFim = new Date(torneio.data_fim || torneio.data);
+                              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                              
+                              if (torneio.data === torneio.data_fim || !torneio.data_fim) {
+                                // Torneio de 1 dia
+                                return dataInicio.toLocaleDateString('pt-BR', {
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric',
+                                });
+                              } else {
+                                // Torneio multi-dia
+                                const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
+                                if (mesmoMes) {
+                                  return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })} (${diasDuracao} dias)`;
+                                } else {
+                                  return `${dataInicio.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                  })} a ${dataFim.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })} (${diasDuracao} dias)`;
+                                }
+                              }
+                            })()}
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
@@ -140,6 +225,19 @@ export default async function TorneiosPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Botão LetzPlay */}
+                      {torneio.link_letzplay && (
+                        <a
+                          href={torneio.link_letzplay}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-primary-100 text-gray-700 hover:text-primary-700 rounded-lg transition-all font-semibold text-sm group/btn whitespace-nowrap"
+                        >
+                          <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                          LetzPlay
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -169,12 +267,24 @@ export default async function TorneiosPage() {
             Homologue seus torneios no Ranking BT e faça parte do circuito oficial da Baixada Santista.
             Entre em contato conosco para saber mais sobre o processo de homologação.
           </p>
-          <a
-            href="mailto:contato@rankingbt.com.br"
-            className="inline-block bg-white text-primary-600 px-8 py-4 rounded-xl font-black text-lg hover:bg-primary-50 transition-colors shadow-xl"
-          >
-            Entrar em Contato
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="https://wa.me/5513997434878?text=Olá!%20Gostaria%20de%20informações%20sobre%20homologação%20de%20torneios%20no%20Ranking%20BT"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-black text-lg transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+            >
+              <MessageCircle className="w-5 h-5" />
+              WhatsApp
+            </a>
+            <a
+              href="mailto:rankingbtbydama@gmail.com?subject=Homologação%20de%20Torneios&body=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20como%20homologar%20meus%20torneios%20no%20Ranking%20BT."
+              className="inline-flex items-center justify-center gap-2 bg-white text-primary-600 px-8 py-4 rounded-xl font-black text-lg hover:bg-primary-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+            >
+              <Mail className="w-5 h-5" />
+              Email
+            </a>
+          </div>
         </div>
       </div>
     </div>

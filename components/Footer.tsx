@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trophy, Mail, MapPin, Calendar, ChevronDown, X } from 'lucide-react';
+import { Trophy, Mail, MapPin, Calendar, ChevronDown, X, MessageCircle, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { useTemporada } from '@/contexts/TemporadaContext';
 
@@ -101,12 +101,25 @@ export default function Footer() {
                   <p className="text-gray-400 text-sm mb-3 leading-relaxed">
                     Para organizadores interessados em homologar torneios
                   </p>
+                  
+                  {/* WhatsApp */}
                   <a 
-                    href="mailto:contato@rankingbt.com.br" 
-                    className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 text-sm font-semibold transition-colors group"
+                    href="https://wa.me/5513997434878?text=Olá!%20Gostaria%20de%20informações%20sobre%20homologação%20de%20torneios%20no%20Ranking%20BT"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 text-sm font-semibold transition-colors group mb-3"
+                  >
+                    <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    (13) 99743-4878
+                  </a>
+                  
+                  {/* Email */}
+                  <a 
+                    href="mailto:rankingbtbydama@gmail.com?subject=Homologação%20de%20Torneios" 
+                    className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 text-sm font-semibold transition-colors group block"
                   >
                     <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    contato@rankingbt.com.br
+                    rankingbtbydama@gmail.com
                   </a>
                 </div>
               </div>
