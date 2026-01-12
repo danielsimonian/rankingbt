@@ -164,116 +164,243 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Top 5 Geral */}
+{/* Top 5 por Categoria Aleatória */}
       <section className="py-20 bg-gradient-to-br from-gray-50 via-primary-50/20 to-royal-50/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-2.5 rounded-full mb-4 font-black text-sm shadow-xl shadow-primary-500/30">
-                <Trophy className="w-4 h-4" />
-                Elite do Ranking
-              </div>
-              <h2 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-gray-900 via-royal-900 to-gray-900 bg-clip-text text-transparent">
-                Top 5 Geral
-              </h2>
-            </div>
-            <Link 
-              href="/rankings"
-              className="hidden sm:inline-flex items-center gap-2 text-royal-700 hover:text-primary-600 font-bold group bg-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all"
-            >
-              Ver ranking completo
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-          
-          <div className="bg-white rounded-3xl shadow-2xl border-2 border-gray-100 overflow-hidden">
-            <div className="divide-y divide-gray-100">
-              {top5Geral.map((jogador, index) => {
-                const podiumGradients = [
-                  'from-primary-400 via-primary-500 to-primary-600',
-                  'from-gray-300 via-gray-400 to-gray-500', 
-                  'from-amber-600 via-amber-700 to-amber-800'
-                ];
-                const podiumBg = [
-                  'bg-gradient-to-br from-primary-50 via-yellow-50 to-amber-50',
-                  'bg-gradient-to-br from-gray-50 to-slate-50',
-                  'bg-gradient-to-br from-orange-50 to-amber-50'
-                ];
-                const podiumShadow = [
-                  'shadow-primary-500/20',
-                  'shadow-gray-400/20',
-                  'shadow-amber-600/20'
-                ];
-                const isPodium = index < 3;
+          {(() => {
+            // Tentar diferentes combinações até achar jogadores
+            const categorias = ['C', 'B', 'A', 'D', 'FUN'];
+            const generos = ['Masculino', 'Feminino'];
+            
+            let top5Categoria: typeof jogadores = [];
+            let categoriaEscolhida = '';
+            let generoEscolhido = '';
+            
+            // Sortear categoria e gênero, ou usar a primeira disponível
+            for (let i = 0; i < categorias.length && top5Categoria.length === 0; i++) {
+              for (let j = 0; j < generos.length && top5Categoria.length === 0; j++) {
+                const catIndex = (Math.floor(Math.random() * categorias.length) + i) % categorias.length;
+                const genIndex = (Math.floor(Math.random() * generos.length) + j) % generos.length;
                 
-                return (
-                  <div 
-                    key={jogador.id} 
-                    className={`flex items-center justify-between p-8 hover:bg-gradient-to-r hover:from-transparent hover:to-primary-50/30 transition-all duration-300 ${isPodium ? podiumBg[index] : ''} relative group`}
-                  >
-                    {/* Shine effect for podium */}
-                    {isPodium && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                    )}
-                    
-                    <div className="flex items-center gap-6 relative z-10">
-                      {/* Premium Position Badge */}
-                      <div className={`relative flex items-center justify-center w-16 h-16 rounded-2xl font-black text-xl shadow-2xl ${podiumShadow[index] || ''} ${
-                        isPodium 
-                          ? `bg-gradient-to-br ${podiumGradients[index]} text-white`
-                          : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700'
-                      } transform group-hover:scale-110 transition-transform`}>
-                        {isPodium && index === 0 && <Trophy className="w-7 h-7 drop-shadow-lg" />}
-                        {!isPodium && jogador.posicao}
-                        {isPodium && index !== 0 && (
-                          <span className="drop-shadow-md">{jogador.posicao}</span>
-                        )}
-                        
-                        {/* Crown for 1st place */}
-                        {index === 0 && (
-                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary-400 rounded-full flex items-center justify-center shadow-lg">
-                            <Sparkles className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Player Info */}
-                      <div>
-                        <div className="font-black text-gray-900 text-xl mb-1">{jogador.nome}</div>
-                        <div className="flex items-center gap-3">
-                          <span className={`px-3 py-1 text-xs font-black rounded-full shadow-sm ${
-                            jogador.categoria === 'A' ? 'bg-gradient-to-r from-accent-500 to-accent-600 text-white' :
-                            jogador.categoria === 'B' ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white' :
-                            'bg-gradient-to-r from-royal-400 to-royal-500 text-white'
-                          }`}>
-                            CATEGORIA {jogador.categoria}
-                          </span>
-                          <span className="text-xs font-bold text-gray-500 uppercase">{jogador.genero}</span>
-                          <span className="text-sm text-gray-600 font-semibold">{jogador.torneios_disputados} torneios</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Points - Premium display */}
-                    <div className="text-right relative z-10">
-                      <div className="font-black text-3xl bg-gradient-to-br from-primary-600 via-primary-500 to-royal-600 bg-clip-text text-transparent drop-shadow-sm">
-                        {jogador.pontos}
-                      </div>
-                      <div className="text-sm text-gray-600 font-bold uppercase tracking-wide">pontos</div>
-                    </div>
-                  </div>
+                const cat = categorias[catIndex];
+                const gen = generos[genIndex];
+                
+                const filtrados = jogadores.filter(jog => 
+                  jog.categoria === cat && 
+                  jog.genero === gen &&
+                  jog.pontos > 0
                 );
-              })}
-            </div>
-          </div>
-          
-          <Link 
-            href="/rankings"
-            className="sm:hidden mt-6 w-full inline-flex items-center justify-center gap-2 text-royal-700 hover:text-primary-600 font-bold py-4 bg-white rounded-xl border-2 border-royal-200 shadow-lg hover:shadow-xl transition-all"
-          >
-            Ver ranking completo
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+                
+                if (filtrados.length > 0) {
+                  top5Categoria = calcularPosicoes(filtrados).slice(0, 5);
+                  categoriaEscolhida = cat;
+                  generoEscolhido = gen;
+                }
+              }
+            }
+            
+            // Se ainda não achou, pega qualquer categoria com jogadores
+            if (top5Categoria.length === 0) {
+              const comPontos = jogadores.filter(j => j.pontos > 0);
+              if (comPontos.length > 0) {
+                top5Categoria = calcularPosicoes(comPontos).slice(0, 5);
+                categoriaEscolhida = 'Geral';
+                generoEscolhido = '';
+              } else {
+                // Se realmente não tem nenhum jogador, não mostra nada
+                return null;
+              }
+            }
+            
+            return (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-10 gap-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-2.5 rounded-full mb-4 font-black text-sm shadow-xl shadow-primary-500/30">
+                      <Trophy className="w-4 h-4" />
+                      Top 5
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-gray-900 via-royal-900 to-gray-900 bg-clip-text text-transparent">
+                      {categoriaEscolhida === 'Geral' 
+                        ? 'Ranking Geral' 
+                        : `Categoria ${categoriaEscolhida}${generoEscolhido ? ` - ${generoEscolhido}` : ''}`
+                      }
+                    </h2>
+                  </div>
+                  <Link 
+                    href="/rankings"
+                    className="inline-flex items-center justify-center gap-2 text-royal-700 hover:text-primary-600 font-bold bg-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Ver todos os rankings
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+                
+                {/* MOBILE: Cards */}
+                <div className="lg:hidden space-y-3">
+                  {top5Categoria.map((jogador, index) => {
+                    const isPodium = index < 3;
+                    const podiumColors = [
+                      'from-yellow-50 to-amber-50 border-yellow-300',
+                      'from-gray-50 to-slate-50 border-gray-300',
+                      'from-orange-50 to-amber-50 border-orange-300',
+                    ];
+
+                    return (
+                      <Link
+                        key={jogador.id}
+                        href={`/jogador/${jogador.id}`}
+                        className={`block bg-white rounded-xl border-2 p-4 shadow-sm hover:shadow-md transition-all ${
+                          isPodium ? `bg-gradient-to-br ${podiumColors[index]}` : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Posição */}
+                          <div
+                            className={`flex items-center justify-center w-14 h-14 rounded-xl font-black text-xl shadow-md flex-shrink-0 ${
+                              index === 0
+                                ? 'bg-gradient-to-br from-primary-400 to-primary-600 text-white'
+                                : index === 1
+                                ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
+                                : index === 2
+                                ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {index === 0 ? (
+                              <div className="relative">
+                                <Trophy className="w-7 h-7" />
+                                <Sparkles className="w-3 h-3 text-white absolute -top-1 -right-1" />
+                              </div>
+                            ) : (
+                              jogador.posicao
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-black text-gray-900 text-lg truncate">
+                                {jogador.nome}
+                              </h3>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-black flex-shrink-0 ${
+                                  jogador.categoria === 'A' ? 'bg-red-100 text-red-700' :
+                                  jogador.categoria === 'B' ? 'bg-orange-100 text-orange-700' :
+                                  jogador.categoria === 'C' ? 'bg-yellow-100 text-yellow-700' :
+                                  jogador.categoria === 'D' ? 'bg-green-100 text-green-700' :
+                                  'bg-blue-100 text-blue-700'
+                                }`}
+                              >
+                                {jogador.categoria}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+                              <span>{jogador.genero === 'Masculino' ? '👨' : '👩'} {jogador.genero}</span>
+                              <span>•</span>
+                              <span>{jogador.torneios_disputados} torneios</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Award className="w-5 h-5 text-primary-600" />
+                              <span className="font-black text-primary-600 text-2xl">{jogador.pontos}</span>
+                              <span className="text-sm text-gray-500 font-bold">pontos</span>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* DESKTOP: Tabela Horizontal */}
+                <div className="hidden lg:block bg-white rounded-3xl shadow-2xl border-2 border-gray-100 overflow-hidden">
+                  <div className="divide-y divide-gray-100">
+                    {top5Categoria.map((jogador, index) => {
+                      const podiumGradients = [
+                        'from-primary-400 via-primary-500 to-primary-600',
+                        'from-gray-300 via-gray-400 to-gray-500', 
+                        'from-amber-600 via-amber-700 to-amber-800'
+                      ];
+                      const podiumBg = [
+                        'bg-gradient-to-br from-primary-50 via-yellow-50 to-amber-50',
+                        'bg-gradient-to-br from-gray-50 to-slate-50',
+                        'bg-gradient-to-br from-orange-50 to-amber-50'
+                      ];
+                      const podiumShadow = [
+                        'shadow-primary-500/20',
+                        'shadow-gray-400/20',
+                        'shadow-amber-600/20'
+                      ];
+                      const isPodium = index < 3;
+                      
+                      return (
+                        <Link
+                          key={jogador.id}
+                          href={`/jogador/${jogador.id}`}
+                          className={`flex items-center justify-between p-8 hover:bg-gradient-to-r hover:from-transparent hover:to-primary-50/30 transition-all duration-300 ${isPodium ? podiumBg[index] : ''} relative group`}
+                        >
+                          {/* Shine effect for podium */}
+                          {isPodium && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                          )}
+                          
+                          <div className="flex items-center gap-6 relative z-10">
+                            {/* Premium Position Badge */}
+                            <div className={`relative flex items-center justify-center w-16 h-16 rounded-2xl font-black text-xl shadow-2xl ${podiumShadow[index] || ''} ${
+                              isPodium 
+                                ? `bg-gradient-to-br ${podiumGradients[index]} text-white`
+                                : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700'
+                            } transform group-hover:scale-110 transition-transform`}>
+                              {isPodium && index === 0 && <Trophy className="w-7 h-7 drop-shadow-lg" />}
+                              {!isPodium && jogador.posicao}
+                              {isPodium && index !== 0 && (
+                                <span className="drop-shadow-md">{jogador.posicao}</span>
+                              )}
+                              
+                              {/* Crown for 1st place */}
+                              {index === 0 && (
+                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary-400 rounded-full flex items-center justify-center shadow-lg">
+                                  <Sparkles className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Player Info */}
+                            <div>
+                              <div className="font-black text-gray-900 text-xl mb-1">{jogador.nome}</div>
+                              <div className="flex items-center gap-3">
+                                <span className={`px-3 py-1 text-xs font-black rounded-full shadow-sm ${
+                                  jogador.categoria === 'A' ? 'bg-gradient-to-r from-accent-500 to-accent-600 text-white' :
+                                  jogador.categoria === 'B' ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white' :
+                                  jogador.categoria === 'C' ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white' :
+                                  jogador.categoria === 'D' ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' :
+                                  'bg-gradient-to-r from-royal-400 to-royal-500 text-white'
+                                }`}>
+                                  CATEGORIA {jogador.categoria}
+                                </span>
+                                <span className="text-xs font-bold text-gray-500 uppercase">{jogador.genero}</span>
+                                <span className="text-sm text-gray-600 font-semibold">{jogador.torneios_disputados} torneios</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Points - Premium display */}
+                          <div className="text-right relative z-10">
+                            <div className="font-black text-3xl bg-gradient-to-br from-primary-600 via-primary-500 to-royal-600 bg-clip-text text-transparent drop-shadow-sm">
+                              {jogador.pontos}
+                            </div>
+                            <div className="text-sm text-gray-600 font-bold uppercase tracking-wide">pontos</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </section>
 

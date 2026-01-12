@@ -149,10 +149,10 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
   const podios = resultados.filter(r => ['Campeão', 'Vice', '3º Lugar'].includes(r.colocacao)).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-6 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link
             href="/rankings"
             className="inline-flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors mb-4"
@@ -162,60 +162,62 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
           </Link>
         </div>
 
-        {/* Card Principal do Jogador */}
-        <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl p-8 mb-8 text-white">
-          <div className="flex items-start gap-6">
+        {/* Card Principal do Jogador - MOBILE OTIMIZADO */}
+        <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 mb-6 sm:mb-8 text-white overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-              <User className="w-12 h-12 text-white" />
+            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+              <User className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
             </div>
 
             {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-black">{jogador.nome}</h1>
-                <span className={`px-3 py-1 rounded-full text-xs font-black ${
+            <div className="flex-1 min-w-0 w-full">
+              {/* Nome + Badge */}
+              <div className="flex flex-col gap-2 mb-3">
+                <h1 className="text-2xl sm:text-4xl font-black break-words">{jogador.nome}</h1>
+                <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-black w-fit ${
                   jogador.categoria === 'A' ? 'bg-red-500' :
                   jogador.categoria === 'B' ? 'bg-orange-500' :
                   jogador.categoria === 'C' ? 'bg-yellow-500' :
                   jogador.categoria === 'D' ? 'bg-green-500' :
                   'bg-blue-500'
-                } text-white`}>
+                } text-white shadow-lg`}>
                   CATEGORIA {jogador.categoria}
                 </span>
               </div>
 
-              <div className="flex items-center gap-4 text-primary-100 mb-4">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
+              {/* Detalhes */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-base text-primary-100 mb-4">
+                <div className="flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span>{jogador.genero}</span>
                 </div>
-                <span>•</span>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>{jogador.cidade || 'Baixada Santista'}</span>
+                <span className="hidden sm:inline">•</span>
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="truncate max-w-[150px] sm:max-w-none">{jogador.cidade || 'Baixada Santista'}</span>
                 </div>
                 {jogador.telefone && (
                   <>
-                    <span>•</span>
-                    <span>{jogador.telefone}</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="text-xs sm:text-sm">{jogador.telefone}</span>
                   </>
                 )}
               </div>
 
-              {/* Conquistas Rápidas */}
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-yellow-300" />
-                  <span className="font-bold">{titulos} {titulos === 1 ? 'Título' : 'Títulos'}</span>
+              {/* Conquistas */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-base">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 flex-shrink-0" />
+                  <span className="font-bold whitespace-nowrap">{titulos} {titulos === 1 ? 'Título' : 'Títulos'}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-gray-300" />
-                  <span className="font-bold">{vices} Vice{vices !== 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300 flex-shrink-0" />
+                  <span className="font-bold whitespace-nowrap">{vices} Vice{vices !== 1 ? 's' : ''}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-orange-300" />
-                  <span className="font-bold">{podios} Pódio{podios !== 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-orange-300 flex-shrink-0" />
+                  <span className="font-bold whitespace-nowrap">{podios} Pódio{podios !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             </div>
@@ -223,36 +225,36 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sm:p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
-                  <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
+                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 text-${stat.color}-600`} />
                 </div>
-                <TrendingUp className="w-5 h-5 text-green-500" />
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
               </div>
-              <h3 className="text-3xl font-black text-gray-900 mb-1">{stat.value}</h3>
-              <p className="text-sm text-gray-600 font-semibold">{stat.label}</p>
+              <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">{stat.value}</h3>
+              <p className="text-xs sm:text-sm text-gray-600 font-semibold">{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* Gráfico de Evolução */}
         {evolucao.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary-600" />
               Evolução de Pontos (Últimos 6 Meses)
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={evolucao}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" />
-                <YAxis />
+                <XAxis dataKey="mes" style={{ fontSize: '12px' }} />
+                <YAxis style={{ fontSize: '12px' }} />
                 <Tooltip />
                 <Line type="monotone" dataKey="pontos" stroke="#FCBA28" strokeWidth={3} />
               </LineChart>
@@ -261,43 +263,43 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
         )}
 
         {/* Grid: Histórico de Torneios + Histórico de Categorias */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Histórico de Torneios */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary-600" />
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h3 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" />
                   Histórico de Torneios ({resultados.length})
                 </h3>
               </div>
 
               <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
                 {resultados.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Nenhum torneio disputado ainda</p>
+                  <div className="p-8 sm:p-12 text-center">
+                    <Trophy className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm sm:text-base text-gray-600">Nenhum torneio disputado ainda</p>
                   </div>
                 ) : (
                   resultados.map((resultado) => (
                     <div key={resultado.id} className="p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-900 mb-1">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 mb-2 text-sm sm:text-base break-words">
                             {resultado.torneio_nome}
                           </h4>
-                          <div className="flex items-center gap-3 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {formatarData(resultado.torneio_data)}
-                          </div>
-                            <span>•</span>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                             <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              {resultado.torneio_cidade}
+                              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="whitespace-nowrap">{formatarData(resultado.torneio_data)}</span>
                             </div>
-                            <span>•</span>
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                            <span className="hidden sm:inline">•</span>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">{resultado.torneio_cidade}</span>
+                            </div>
+                            <span className="hidden sm:inline">•</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap ${
                               resultado.categoria_jogada === 'A' ? 'bg-red-100 text-red-700' :
                               resultado.categoria_jogada === 'B' ? 'bg-orange-100 text-orange-700' :
                               resultado.categoria_jogada === 'C' ? 'bg-yellow-100 text-yellow-700' :
@@ -308,8 +310,8 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
                             </span>
                           </div>
                         </div>
-                        <div className="text-right ml-4">
-                          <div className={`font-bold mb-1 ${
+                        <div className="text-left sm:text-right sm:ml-4 flex sm:flex-col gap-3 sm:gap-0">
+                          <div className={`font-bold text-sm sm:text-base sm:mb-1 ${
                             resultado.colocacao === 'Campeão' ? 'text-yellow-600' :
                             resultado.colocacao === 'Vice' ? 'text-gray-600' :
                             resultado.colocacao === '3º Lugar' ? 'text-orange-600' :
@@ -332,29 +334,29 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
           {/* Histórico de Categorias */}
           <div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-6 py-4 border-b border-purple-200">
-                <h3 className="font-bold text-purple-900 flex items-center gap-2">
-                  <Target className="w-5 h-5" />
+              <div className="bg-gradient-to-r from-purple-50 to-purple-100 px-4 sm:px-6 py-3 sm:py-4 border-b border-purple-200">
+                <h3 className="text-sm sm:text-base font-bold text-purple-900 flex items-center gap-2">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                   Mudanças de Categoria
                 </h3>
               </div>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {historico.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Target className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm text-gray-600">Sem mudanças registradas</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <Target className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mx-auto mb-3" />
+                    <p className="text-xs sm:text-sm text-gray-600">Sem mudanças registradas</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {historico.map((item, index) => (
                       <div key={item.id} className="relative">
                         {index !== historico.length - 1 && (
-                          <div className="absolute left-4 top-10 bottom-0 w-0.5 bg-purple-200"></div>
+                          <div className="absolute left-3 sm:left-4 top-10 bottom-0 w-0.5 bg-purple-200"></div>
                         )}
                         <div className="flex gap-3">
-                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
-                            <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 relative z-10">
+                            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-purple-600 rounded-full"></div>
                           </div>
                           <div className="flex-1 pb-6">
                             <div className="text-xs text-gray-500 mb-1">
@@ -369,7 +371,7 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
                                 {item.categoria_nova}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600">{item.motivo}</p>
+                            <p className="text-xs sm:text-sm text-gray-600">{item.motivo}</p>
                           </div>
                         </div>
                       </div>
@@ -381,11 +383,11 @@ export default function PerfilJogadorPage({ params }: { params: { id: string } }
           </div>
         </div>
       </div>
-      <div className="mt-8 text-center">
-  <p className="text-sm text-gray-500">
-    Ranking BT - Sistema Oficial de Rankings da Baixada Santista
-  </p>
-</div>
+      <div className="mt-6 sm:mt-8 text-center px-4">
+        <p className="text-xs sm:text-sm text-gray-500">
+          Ranking BT - Sistema Oficial de Rankings da Baixada Santista
+        </p>
+      </div>
     </div>
   );
 }

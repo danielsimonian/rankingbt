@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, TrendingUp, Award, Download, Calendar, Archive } from 'lucide-react';
+import { Trophy, TrendingUp, Award, Download, Calendar, Archive, Info, ChevronDown } from 'lucide-react';
 import { getJogadores, calcularPosicoes } from '@/lib/api';
 import { getRankingTemporada } from '@/lib/api/temporadas';
 import { useTemporada } from '@/contexts/TemporadaContext';
@@ -14,6 +14,7 @@ export default function RankingsPage() {
   const [categoriaFilter, setCategoriaFilter] = useState<Categoria | 'TODAS'>('TODAS');
   const [generoFilter, setGeneroFilter] = useState<Genero | 'TODOS'>('TODOS');
   const [loading, setLoading] = useState(true);
+  const [mostrarInfo, setMostrarInfo] = useState(false);
 
   // 🎲 Definir categoria e gênero aleatórios na primeira carga
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function RankingsPage() {
     
     setCategoriaFilter(categoriaAleatoria);
     setGeneroFilter(generoAleatorio);
-  }, []); // Roda apenas uma vez ao montar
+  }, []);
 
   useEffect(() => {
     loadJogadores();
@@ -38,14 +39,11 @@ export default function RankingsPage() {
 
     try {
       if (temporadaAtual.ativa) {
-        // Temporada ativa: busca ranking atual (tabela jogadores)
         const data = await getJogadores();
         setJogadores(data);
       } else {
-        // Temporada encerrada: busca snapshot (tabela rankings_temporada)
         const rankingSnapshot = await getRankingTemporada(temporadaAtual.id);
         
-        // Transformar formato para compatibilidade
         const jogadoresFormatados = rankingSnapshot.map((r: any) => ({
           id: r.jogador_id,
           nome: r.jogador?.nome || 'Jogador',
@@ -71,15 +69,13 @@ export default function RankingsPage() {
     setLoading(false);
   };
 
-  // Filtrar jogadores
   const jogadoresFiltrados = jogadores.filter(jogador => {
     const matchCategoria = categoriaFilter === 'TODAS' || jogador.categoria === categoriaFilter;
     const matchGenero = generoFilter === 'TODOS' || jogador.genero === generoFilter;
-    const temPontos = jogador.pontos > 0; // ✅ Apenas jogadores com pontos
+    const temPontos = jogador.pontos > 0;
     return matchCategoria && matchGenero && temPontos;
   });
 
-  // Calcular posições
   const jogadoresComPosicao = calcularPosicoes(jogadoresFiltrados);
 
   const handleExportarPDF = () => {
@@ -105,75 +101,97 @@ export default function RankingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-6 sm:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Badge de Temporada */}
-        {temporadaAtual && !temporadaAtual.ativa && (
-          <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Archive className="w-5 h-5 text-orange-600" />
-              <div>
-                <p className="font-semibold text-orange-900">
-                  📁 Visualizando Temporada Encerrada: {temporadaAtual.nome}
-                </p>
-                <p className="text-sm text-orange-700">
-                  Este é o ranking final preservado desta temporada.
+        
+        {/* Header Compacto */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-primary-600" />
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900">
+                  Rankings Oficiais
+                </h1>
+              </div>
+              {temporadaAtual && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Calendar className="w-3 h-3 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    {temporadaAtual.nome}
+                    {temporadaAtual.ativa && (
+                      <span className="ml-1.5 inline-flex items-center gap-1 text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">
+                        🟢 Ativa
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Botão Info */}
+            <button
+              onClick={() => setMostrarInfo(!mostrarInfo)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Info className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Alert Temporada Encerrada */}
+          {temporadaAtual && !temporadaAtual.ativa && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Archive className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                <p className="text-sm font-semibold text-orange-900">
+                  📁 Temporada Encerrada: {temporadaAtual.nome}
                 </p>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white px-5 py-2.5 rounded-full mb-6 font-black text-sm shadow-xl shadow-primary-500/30">
-            <Trophy className="w-4 h-4" />
-            Sistema Top 10
-          </div>
-          <p className="text-sm font-bold text-primary-600 mb-2">RANKING BT</p>
-          <h1 className="text-4xl sm:text-5xl font-black mb-4">
-            <span className="bg-gradient-to-r from-gray-900 via-royal-900 to-gray-900 bg-clip-text text-transparent">
-              Rankings Oficiais
-            </span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
-            Classificação baseada nos 10 melhores resultados dos últimos 12 meses
-          </p>
-          {temporadaAtual && (
-            <div className="flex items-center justify-center gap-2 mt-3">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-600">
-                {temporadaAtual.nome}
-                {temporadaAtual.ativa && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                    🟢 Ativa
-                  </span>
-                )}
-              </span>
+          {/* Info Dropdown */}
+          {mostrarInfo && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 animate-in slide-in-from-top">
+              <h3 className="font-bold text-blue-900 mb-2 text-sm">
+                {temporadaAtual?.ativa 
+                  ? '🏆 Sistema Top 10' 
+                  : '📁 Ranking Histórico'
+                }
+              </h3>
+              {temporadaAtual?.ativa ? (
+                <ul className="text-xs text-blue-800 space-y-1">
+                  <li>• Apenas os 10 melhores resultados contam</li>
+                  <li>• Últimos 12 meses</li>
+                  <li>• Padrão internacional ITF</li>
+                </ul>
+              ) : (
+                <p className="text-xs text-blue-800">
+                  Ranking final preservado de {temporadaAtual?.nome}
+                </p>
+              )}
             </div>
           )}
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Filtro de Categoria */}
+        {/* Filtros Compactos */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Categoria */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-3">
-                Filtrar por Categoria
-              </label>
-              <div className="grid grid-cols-3 gap-2">
+              <label className="block text-xs font-bold text-gray-700 mb-2">Categoria</label>
+              <div className="flex gap-2">
                 {(['A', 'B', 'C', 'D', 'FUN'] as Categoria[]).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setCategoriaFilter(cat)}
-                    className={`px-4 py-3 rounded-lg font-bold transition-all ${
+                    className={`flex-1 px-3 py-3 rounded-lg font-bold text-sm transition-all ${
                       categoriaFilter === cat
-                        ? cat === 'A' ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' :
-                          cat === 'B' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg' :
-                          cat === 'C' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg' :
-                          cat === 'D' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg' :
-                          'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                        ? cat === 'A' ? 'bg-red-600 text-white' :
+                          cat === 'B' ? 'bg-orange-600 text-white' :
+                          cat === 'C' ? 'bg-yellow-600 text-white' :
+                          cat === 'D' ? 'bg-green-600 text-white' :
+                          'bg-blue-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -183,17 +201,15 @@ export default function RankingsPage() {
               </div>
             </div>
 
-            {/* Filtro de Gênero */}
+            {/* Gênero */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-3">
-                Filtrar por Gênero
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-2">Gênero</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setGeneroFilter('Masculino')}
-                  className={`px-4 py-3 rounded-lg font-bold transition-all ${
+                  className={`px-3 py-3 rounded-lg font-bold text-sm transition-all ${
                     generoFilter === 'Masculino'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -201,9 +217,9 @@ export default function RankingsPage() {
                 </button>
                 <button
                   onClick={() => setGeneroFilter('Feminino')}
-                  className={`px-4 py-3 rounded-lg font-bold transition-all ${
+                  className={`px-3 py-2 rounded-lg font-bold text-sm transition-all ${
                     generoFilter === 'Feminino'
-                      ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg'
+                      ? 'bg-pink-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -214,214 +230,224 @@ export default function RankingsPage() {
           </div>
         </div>
 
-        {/* Header da Tabela com Botões */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Ranking {categoriaFilter === 'TODAS' ? 'Geral' : `Categoria ${categoriaFilter}`}
-            {generoFilter !== 'TODOS' && ` - ${generoFilter}`}
-          </h2>
-          <div className="flex items-center gap-3">
-            {/* Botão Ver Ranking Detalhado */}
-            {categoriaFilter !== 'TODAS' && generoFilter !== 'TODOS' && (
-              <button
-                onClick={() => {
-                  const categoriaUrl = categoriaFilter.toLowerCase();
-                  const generoUrl = generoFilter.toLowerCase();
-                  window.location.href = `/ranking/${categoriaUrl}/${generoUrl}`;
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-lg hover:shadow-xl"
-              >
-                <Trophy className="w-4 h-4" />
-                Ver Ranking Detalhado
-              </button>
-            )}
+        {/* Header com Botões */}
+        <div className="mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 className="text-lg font-bold text-gray-900">
+              {categoriaFilter === 'TODAS' ? 'Geral' : `Categoria ${categoriaFilter}`}
+              {generoFilter !== 'TODOS' && ` - ${generoFilter}`}
+            </h2>
             
-            {/* Botão Exportar PDF */}
-            <button
-              onClick={handleExportarPDF}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold shadow-lg hover:shadow-xl"
-            >
-              <Download className="w-4 h-4" />
-              Exportar PDF
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {categoriaFilter !== 'TODAS' && generoFilter !== 'TODOS' && (
+                <button
+                  onClick={() => {
+                    const categoriaUrl = categoriaFilter.toLowerCase();
+                    const generoUrl = generoFilter.toLowerCase();
+                    window.location.href = `/ranking/${categoriaUrl}/${generoUrl}`;
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm shadow-lg"
+                >
+                  <Trophy className="w-4 h-4" />
+                  Detalhado
+                </button>
+              )}
+              
+              <button
+                onClick={handleExportarPDF}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold text-sm shadow-lg"
+              >
+                <Download className="w-4 h-4" />
+                PDF
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tabela de Rankings */}
+        {/* Lista/Tabela */}
         {jogadoresComPosicao.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-12 text-center">
-            <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
               Nenhum jogador encontrado
             </h3>
-            <p className="text-gray-600">
-              {temporadaAtual?.ativa 
-                ? 'Tente ajustar os filtros de categoria ou gênero'
-                : 'Esta temporada não possui jogadores nesta categoria/gênero'
-              }
+            <p className="text-sm text-gray-600">
+              Tente ajustar os filtros
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-2xl border-2 border-gray-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-600 uppercase tracking-wider">
-                      Posição
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-600 uppercase tracking-wider">
-                      Jogador
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-600 uppercase tracking-wider">
-                      Categoria
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-600 uppercase tracking-wider">
-                      Pontos
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-600 uppercase tracking-wider">
-                      Torneios
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-600 uppercase tracking-wider">
-                      Cidade
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {jogadoresComPosicao.map((jogador, index) => {
-                    const isPodium = index < 3;
-                    const podiumBg = [
-                      'bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50',
-                      'bg-gradient-to-r from-gray-50 via-slate-50 to-gray-50',
-                      'bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50',
-                    ];
+          <>
+            {/* MOBILE: Cards */}
+            <div className="lg:hidden space-y-3">
+              {jogadoresComPosicao.map((jogador, index) => {
+                const isPodium = index < 3;
+                const podiumColors = [
+                  'from-yellow-50 to-amber-50 border-yellow-300',
+                  'from-gray-50 to-slate-50 border-gray-300',
+                  'from-orange-50 to-amber-50 border-orange-300',
+                ];
 
-                    return (
-                      <tr
-                        key={jogador.id}
-                        onClick={() => window.location.href = `/jogador/${jogador.id}`}
-                        className={`hover:bg-primary-50/30 transition-colors cursor-pointer group ${
-                          isPodium ? podiumBg[index] : ''
+                return (
+                  <div
+                    key={jogador.id}
+                    onClick={() => window.location.href = `/jogador/${jogador.id}`}
+                    className={`bg-white rounded-xl border-2 p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                      isPodium ? `bg-gradient-to-br ${podiumColors[index]}` : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Posição */}
+                      <div
+                        className={`flex items-center justify-center w-12 h-12 rounded-xl font-black text-lg shadow-md flex-shrink-0 ${
+                          index === 0
+                            ? 'bg-gradient-to-br from-primary-400 to-primary-600 text-white'
+                            : index === 1
+                            ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
+                            : index === 2
+                            ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+                            : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {/* Posição */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`flex items-center justify-center w-10 h-10 rounded-xl font-black text-lg shadow-md ${
-                                index === 0
-                                  ? 'bg-gradient-to-br from-primary-400 to-primary-600 text-white'
-                                  : index === 1
-                                  ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
-                                  : index === 2
-                                  ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
-                                  : 'bg-gray-100 text-gray-700'
-                              }`}
-                            >
-                              {index === 0 && <Trophy className="w-5 h-5" />}
-                              {index !== 0 && jogador.posicao}
-                            </div>
-                          </div>
-                        </td>
+                        {index === 0 ? <Trophy className="w-6 h-6" /> : jogador.posicao}
+                      </div>
 
-                        {/* Nome */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <div className="font-bold text-gray-900 text-base group-hover:text-primary-600 transition-colors">
-                                {jogador.nome}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {jogador.genero === 'Masculino' ? '👨' : '👩'} {jogador.genero}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Categoria */}
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-gray-900 truncate">
+                            {jogador.nome}
+                          </h3>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-black ${
-                              jogador.categoria === 'A'
-                                ? 'bg-red-100 text-red-700'
-                                : jogador.categoria === 'B'
-                                ? 'bg-orange-100 text-orange-700'
-                                : jogador.categoria === 'C'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : jogador.categoria === 'D'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-blue-100 text-blue-700'
+                            className={`px-2 py-0.5 rounded-full text-xs font-black flex-shrink-0 ${
+                              jogador.categoria === 'A' ? 'bg-red-100 text-red-700' :
+                              jogador.categoria === 'B' ? 'bg-orange-100 text-orange-700' :
+                              jogador.categoria === 'C' ? 'bg-yellow-100 text-yellow-700' :
+                              jogador.categoria === 'D' ? 'bg-green-100 text-green-700' :
+                              'bg-blue-100 text-blue-700'
                             }`}
                           >
                             {jogador.categoria}
                           </span>
-                        </td>
+                        </div>
 
-                        {/* Pontos */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3 text-xs text-gray-600 mb-2">
+                          <span>{jogador.genero === 'Masculino' ? '👨' : '👩'} {jogador.genero}</span>
+                          <span>•</span>
+                          <span>📍 {jogador.cidade || '-'}</span>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1">
                             <Award className="w-4 h-4 text-primary-600" />
-                            <span className="font-black text-primary-600 text-lg">
-                              {jogador.pontos}
-                            </span>
+                            <span className="font-black text-primary-600">{jogador.pontos}</span>
+                            <span className="text-xs text-gray-500">pts</span>
                           </div>
-                        </td>
-
-                        {/* Torneios */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <TrendingUp className="w-4 h-4 text-gray-400" />
-                            <span className="text-gray-700 font-semibold">
-                              {jogador.torneios_disputados}
-                            </span>
+                            <span className="font-semibold text-gray-700">{jogador.torneios_disputados}</span>
+                            <span className="text-xs text-gray-500">torneios</span>
                           </div>
-                        </td>
-
-                        {/* Cidade */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-gray-600">{jogador.cidade || '-'}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        )}
 
-        {/* Informações do Sistema */}
-        <div className="mt-8 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-          <div className="flex gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-white" />
+            {/* DESKTOP: Tabela */}
+            <div className="hidden lg:block bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-black text-gray-600 uppercase">Pos</th>
+                      <th className="px-6 py-3 text-left text-xs font-black text-gray-600 uppercase">Jogador</th>
+                      <th className="px-6 py-3 text-left text-xs font-black text-gray-600 uppercase">Cat</th>
+                      <th className="px-6 py-3 text-left text-xs font-black text-gray-600 uppercase">Pontos</th>
+                      <th className="px-6 py-3 text-left text-xs font-black text-gray-600 uppercase">Torneios</th>
+                      <th className="px-6 py-3 text-left text-xs font-black text-gray-600 uppercase">Cidade</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {jogadoresComPosicao.map((jogador, index) => {
+                      const isPodium = index < 3;
+                      const podiumBg = [
+                        'bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50',
+                        'bg-gradient-to-r from-gray-50 via-slate-50 to-gray-50',
+                        'bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50',
+                      ];
+
+                      return (
+                        <tr
+                          key={jogador.id}
+                          onClick={() => window.location.href = `/jogador/${jogador.id}`}
+                          className={`hover:bg-primary-50/30 transition-colors cursor-pointer ${
+                            isPodium ? podiumBg[index] : ''
+                          }`}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div
+                              className={`flex items-center justify-center w-10 h-10 rounded-xl font-black text-lg shadow-md ${
+                                index === 0 ? 'bg-gradient-to-br from-primary-400 to-primary-600 text-white' :
+                                index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white' :
+                                index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                                'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {index === 0 ? <Trophy className="w-5 h-5" /> : jogador.posicao}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="font-bold text-gray-900">{jogador.nome}</div>
+                              <div className="text-sm text-gray-600">
+                                {jogador.genero === 'Masculino' ? '👨' : '👩'} {jogador.genero}
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-black ${
+                                jogador.categoria === 'A' ? 'bg-red-100 text-red-700' :
+                                jogador.categoria === 'B' ? 'bg-orange-100 text-orange-700' :
+                                jogador.categoria === 'C' ? 'bg-yellow-100 text-yellow-700' :
+                                jogador.categoria === 'D' ? 'bg-green-100 text-green-700' :
+                                'bg-blue-100 text-blue-700'
+                              }`}
+                            >
+                              {jogador.categoria}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Award className="w-4 h-4 text-primary-600" />
+                              <span className="font-black text-primary-600 text-lg">{jogador.pontos}</span>
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-700 font-semibold">{jogador.torneios_disputados}</span>
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-gray-600">{jogador.cidade || '-'}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div>
-              <h3 className="font-bold text-blue-900 mb-2">
-                {temporadaAtual?.ativa 
-                  ? 'Como funciona o sistema Top 10?' 
-                  : 'Ranking Histórico - Temporada Encerrada'
-                }
-              </h3>
-              {temporadaAtual?.ativa ? (
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Apenas os <strong>10 melhores resultados</strong> dos últimos 12 meses contam para o ranking</li>
-                  <li>• Resultados mais antigos que 12 meses são automaticamente descartados</li>
-                  <li>• Sistema justo que valoriza consistência e performance recente</li>
-                  <li>• Padrão internacional ITF (International Tennis Federation)</li>
-                </ul>
-              ) : (
-                <p className="text-sm text-blue-800">
-                  Este é o ranking final da <strong>{temporadaAtual?.nome}</strong>. 
-                  Os dados estão preservados como histórico e não são mais atualizados. 
-                  Para ver o ranking atual, selecione a temporada ativa no rodapé da página.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
