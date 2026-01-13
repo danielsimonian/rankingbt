@@ -123,6 +123,13 @@ export default function Header() {
                   <span className="relative z-10">Torneios</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
                 </Link>
+                <Link 
+                  href="/apoiadores" 
+                  className="text-gray-700 hover:text-primary-600 font-bold px-5 py-2.5 rounded-xl hover:bg-primary-50 transition-all relative group"
+                >
+                  <span className="relative z-10">Apoiadores</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-royal-100 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity -z-10"></div>
+                </Link>
                 <Link
                   href="/rankings"
                   className="bg-gradient-to-r from-primary-500 to-primary-600 text-gray-900 px-6 py-2.5 rounded-lg font-bold hover:from-primary-400 hover:to-primary-500 transition-all shadow-lg hover:shadow-xl"
@@ -217,6 +224,13 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Torneios
+                </Link>
+                <Link 
+                  href="/apoiadores" 
+                  className="block text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-bold py-3 px-4 rounded-xl transition-all"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Apoiadores
                 </Link>
                 <Link 
                   href="/cadastro" 
