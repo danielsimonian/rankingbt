@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Heart, Trophy, MapPin, Phone, Instagram, Globe, 
   MessageCircle, Mail, Users, Award, Sparkles, Target,
@@ -94,7 +95,7 @@ export default function ApoiadoresPage() {
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6 leading-tight">
             Apoiadores do
-            <span className="pb-1 block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 bg-clip-text text-transparent mt-2">
+            <span className="block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 bg-clip-text text-transparent mt-2">
               Ranking Oficial
             </span>
           </h1>
@@ -183,9 +184,11 @@ export default function ApoiadoresPage() {
                 {/* Avatar sobreposto */}
                 <div className="relative -mt-16 mb-4">
                   <div className="w-28 h-28 mx-auto rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-100">
-                    <img 
+                    <Image 
                       src={prof.foto} 
                       alt={prof.nome}
+                      width={112}
+                      height={112}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -265,9 +268,11 @@ export default function ApoiadoresPage() {
                 {/* Logo Section */}
                 <div className="p-8 bg-gradient-to-br from-gray-50 to-white border-b-2 border-gray-100">
                   <div className="w-32 h-32 mx-auto rounded-2xl bg-white border-2 border-gray-200 shadow-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
-                    <img 
+                    <Image 
                       src={point.logo} 
                       alt={point.nome}
+                      width={128}
+                      height={128}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -384,7 +389,7 @@ export default function ApoiadoresPage() {
                 </div>
                 <div>
                   <div className="font-bold mb-1">Badge Oficial</div>
-                  <div className="text-sm text-primary-100">Selo de "Professor/Point Homologado"</div>
+                  <div className="text-sm text-primary-100">Selo de &quot;Professor/Point Homologado&quot;</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
