@@ -189,6 +189,7 @@ export default function ApoiadoresPage() {
                       alt={prof.nome}
                       width={112}
                       height={112}
+                      unoptimized
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -273,6 +274,7 @@ export default function ApoiadoresPage() {
                       alt={point.nome}
                       width={128}
                       height={128}
+                      unoptimized
                       className="w-full h-full object-cover"
                     />
                   </div>
