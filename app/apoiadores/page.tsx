@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import FormularioApoiador from '@/components/FormularioApoiador';
 import { 
   Heart, Trophy, MapPin, Phone, Instagram, Globe, 
   MessageCircle, Mail, Users, Award, Sparkles, Target,
@@ -415,23 +416,22 @@ export default function ApoiadoresPage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="max-w-3xl mx-auto">
+            <FormularioApoiador />
+          </div>
+
+          {/* WhatsApp alternativo */}
+          <div className="mt-8 text-center">
+            <p className="text-primary-100 mb-4">Prefere WhatsApp?</p>
             <a
               href="https://wa.me/5513997434878?text=Olá!%20Gostaria%20de%20ser%20um%20apoiador%20do%20Ranking%20BT"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white px-10 py-5 rounded-xl font-black text-lg transition-all shadow-2xl hover:shadow-green-500/50 hover:scale-105"
+              className="inline-flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl hover:shadow-green-500/50 hover:scale-105"
             >
-              <MessageCircle className="w-6 h-6" />
+              <MessageCircle className="w-5 h-5" />
               Falar no WhatsApp
-              <ExternalLink className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
-            <a
-              href="mailto:rankingbtbydama@gmail.com?subject=Quero ser Apoiador do Ranking BT"
-              className="group inline-flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-10 py-5 rounded-xl font-black text-lg transition-all border-2 border-white/30 shadow-xl hover:scale-105"
-            >
-              <Mail className="w-6 h-6" />
-              Enviar E-mail
+              <ExternalLink className="w-4 h-4" />
             </a>
           </div>
         </div>

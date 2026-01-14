@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { Trophy, Calendar, MapPin, CheckCircle, Clock, ExternalLink, MessageCircle, Mail } from 'lucide-react';
+import FormularioOrganizador from '@/components/FormularioOrganizador';
+import { Trophy, Calendar, MapPin, CheckCircle, Clock, ExternalLink, MessageCircle } from 'lucide-react';
 
 export const revalidate = 60;
 
@@ -83,14 +84,12 @@ export default async function TorneiosPage() {
                               const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                               
                               if (torneio.data === torneio.data_fim || !torneio.data_fim) {
-                                // Torneio de 1 dia
                                 return dataInicio.toLocaleDateString('pt-BR', {
                                   day: 'numeric',
                                   month: 'long',
                                   year: 'numeric',
                                 });
                               } else {
-                                // Torneio multi-dia
                                 const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
                                 if (mesmoMes) {
                                   return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
@@ -191,14 +190,12 @@ export default async function TorneiosPage() {
                               const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                               
                               if (torneio.data === torneio.data_fim || !torneio.data_fim) {
-                                // Torneio de 1 dia
                                 return dataInicio.toLocaleDateString('pt-BR', {
                                   day: 'numeric',
                                   month: 'long',
                                   year: 'numeric',
                                 });
                               } else {
-                                // Torneio multi-dia
                                 const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
                                 if (mesmoMes) {
                                   return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
@@ -260,14 +257,22 @@ export default async function TorneiosPage() {
         )}
 
         {/* CTA para Organizadores */}
-        <div className="mt-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl p-8 md:p-12 text-white text-center">
+        <div className="mt-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-2xl p-8 md:p-12 text-white">
           <Trophy className="w-16 h-16 mx-auto mb-6 text-primary-200" />
-          <h2 className="text-3xl font-black mb-4">É organizador de torneios?</h2>
-          <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
+          <h2 className="text-3xl font-black mb-4 text-center">É organizador de torneios?</h2>
+          <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto text-center">
             Homologue seus torneios no Ranking BT e faça parte do circuito oficial da Baixada Santista.
-            Entre em contato conosco para saber mais sobre o processo de homologação.
+            Preencha o formulário ou entre em contato via WhatsApp.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          
+          {/* Formulário */}
+          <div className="max-w-3xl mx-auto mb-8">
+            <FormularioOrganizador />
+          </div>
+
+          {/* WhatsApp alternativo */}
+          <div className="text-center">
+            <p className="text-primary-100 mb-4">Prefere WhatsApp?</p>
             <a
               href="https://wa.me/5513997434878?text=Olá!%20Gostaria%20de%20informações%20sobre%20homologação%20de%20torneios%20no%20Ranking%20BT"
               target="_blank"
@@ -275,14 +280,7 @@ export default async function TorneiosPage() {
               className="inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-black text-lg transition-all shadow-xl hover:shadow-2xl hover:scale-105"
             >
               <MessageCircle className="w-5 h-5" />
-              WhatsApp
-            </a>
-            <a
-              href="mailto:rankingbtbydama@gmail.com?subject=Homologação%20de%20Torneios&body=Olá!%20Gostaria%20de%20mais%20informações%20sobre%20como%20homologar%20meus%20torneios%20no%20Ranking%20BT."
-              className="inline-flex items-center justify-center gap-2 bg-white text-primary-600 px-8 py-4 rounded-xl font-black text-lg hover:bg-primary-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
-            >
-              <Mail className="w-5 h-5" />
-              Email
+              Falar no WhatsApp
             </a>
           </div>
         </div>
