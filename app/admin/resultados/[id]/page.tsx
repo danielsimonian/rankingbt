@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { getJogadores } from '@/lib/api';
 import { getConfigPontuacaoAtiva } from '@/lib/pontuacao';
 import { Torneio, Jogador, Categoria, ConfiguracaoPontuacao } from '@/types/database';
+import TorneioLogo from '@/components/TorneioLogo';
 
 interface ResultadoForm {
   id: string;
@@ -368,42 +369,48 @@ export default function RegistrarResultadosPage({ params }: { params: { id: stri
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Info do Torneio */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-8 h-8 text-white" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">{torneio?.nome}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Calendar className="w-4 h-4 text-primary-600" />
-                    <span>
-                      {torneio && new Date(torneio.data).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="w-4 h-4 text-primary-600" />
-                    <span>{torneio?.local}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Award className="w-4 h-4 text-primary-600" />
-                    <span>{torneio?.cidade}</span>
-                  </div>
-                </div>
+          {/* Info do Torneio */}
+<div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+  <div className="flex items-start gap-4">
+    {/* LOGO DO TORNEIO - NOVO! */}
+    <TorneioLogo 
+      logoUrl={torneio?.logo_url}
+      nome={torneio?.nome || ''}
+      size="large"
+      className="flex-shrink-0"
+    />
+    
+    <div className="flex-1">
+      <h2 className="text-2xl font-bold text-gray-900 mb-3">{torneio?.nome}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="flex items-center gap-2 text-gray-600">
+          <Calendar className="w-4 h-4 text-primary-600" />
+          <span>
+            {torneio && new Date(torneio.data).toLocaleDateString('pt-BR', {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric'
+            })}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-gray-600">
+          <MapPin className="w-4 h-4 text-primary-600" />
+          <span>{torneio?.local}</span>
+        </div>
+        <div className="flex items-center gap-2 text-gray-600">
+          <Award className="w-4 h-4 text-primary-600" />
+          <span>{torneio?.cidade}</span>
+        </div>
+      </div>
 
-                {torneio?.pontuacao_custom && (
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
-                    ⭐ Pontuação Especial Ativa
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+      {torneio?.pontuacao_custom && (
+        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+          ⭐ Pontuação Especial Ativa
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
           {/* Resultados Existentes */}
           {resultadosExistentes.length > 0 && (

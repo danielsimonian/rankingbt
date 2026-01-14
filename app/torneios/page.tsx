@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import FormularioOrganizador from '@/components/FormularioOrganizador';
 import { Trophy, Calendar, MapPin, CheckCircle, Clock, ExternalLink, MessageCircle } from 'lucide-react';
+import TorneioLogo from '@/components/TorneioLogo';
 
 export const revalidate = 60;
 
@@ -53,105 +54,114 @@ export default async function TorneiosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {proximosTorneios.map((torneio, index) => (
                 <div
-                  key={torneio.id}
-                  className="group bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-gray-100 hover:border-primary-200 hover:scale-105"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {/* Status Badge */}
-                  <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3">
-                    <div className="flex items-center gap-2 text-white">
-                      <CheckCircle className="w-5 h-5" />
-                      <span className="font-black text-sm uppercase">Confirmado</span>
-                    </div>
-                  </div>
+  key={torneio.id}
+  className="group bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-gray-100 hover:border-primary-200 hover:scale-105"
+  style={{ animationDelay: `${index * 100}ms` }}
+>
+  {/* Status Badge */}
+  <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3">
+    <div className="flex items-center gap-2 text-white">
+      <CheckCircle className="w-5 h-5" />
+      <span className="font-black text-sm uppercase">Confirmado</span>
+    </div>
+  </div>
 
-                  {/* Content */}
-                  <div className="p-6">
-                    <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-primary-600 transition-colors">
-                      {torneio.nome}
-                    </h3>
+  {/* Content */}
+  <div className="p-6">
+    {/* LOGO DO TORNEIO - NOVO! */}
+    <div className="flex items-center justify-center mb-4">
+      <TorneioLogo 
+        logoUrl={torneio.logo_url}
+        nome={torneio.nome}
+        size="large"
+      />
+    </div>
 
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center gap-3 text-gray-700">
-                        <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-lg">
-                          <Calendar className="w-5 h-5 text-primary-600" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="font-semibold block">
-                            {(() => {
-                              const dataInicio = new Date(torneio.data);
-                              const dataFim = new Date(torneio.data_fim || torneio.data);
-                              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                              
-                              if (torneio.data === torneio.data_fim || !torneio.data_fim) {
-                                return dataInicio.toLocaleDateString('pt-BR', {
-                                  day: 'numeric',
-                                  month: 'long',
-                                  year: 'numeric',
-                                });
-                              } else {
-                                const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
-                                if (mesmoMes) {
-                                  return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                  })}`;
-                                } else {
-                                  return `${dataInicio.toLocaleDateString('pt-BR', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                  })} a ${dataFim.toLocaleDateString('pt-BR', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                  })}`;
-                                }
-                              }
-                            })()}
-                          </span>
-                          {(() => {
-                            const dataInicio = new Date(torneio.data);
-                            const dataFim = new Date(torneio.data_fim || torneio.data);
-                            const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                            
-                            if (diasDuracao > 1) {
-                              return (
-                                <span className="text-xs text-gray-500">
-                                  ({diasDuracao} dias)
-                                </span>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                      </div>
+    <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-primary-600 transition-colors text-center">
+      {torneio.nome}
+    </h3>
 
-                      <div className="flex items-center gap-3 text-gray-700">
-                        <div className="flex items-center justify-center w-10 h-10 bg-royal-100 rounded-lg">
-                          <MapPin className="w-5 h-5 text-royal-600" />
-                        </div>
-                        <div>
-                          <div className="font-semibold">{torneio.local}</div>
-                          <div className="text-sm text-gray-500">{torneio.cidade}</div>
-                        </div>
-                      </div>
-                    </div>
+    <div className="space-y-3 mb-6">
+      <div className="flex items-center gap-3 text-gray-700">
+        <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-lg">
+          <Calendar className="w-5 h-5 text-primary-600" />
+        </div>
+        <div className="flex-1">
+          <span className="font-semibold block">
+            {(() => {
+              const dataInicio = new Date(torneio.data);
+              const dataFim = new Date(torneio.data_fim || torneio.data);
+              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+              
+              if (torneio.data === torneio.data_fim || !torneio.data_fim) {
+                return dataInicio.toLocaleDateString('pt-BR', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                });
+              } else {
+                const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
+                if (mesmoMes) {
+                  return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}`;
+                } else {
+                  return `${dataInicio.toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'short',
+                  })} a ${dataFim.toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}`;
+                }
+              }
+            })()}
+          </span>
+          {(() => {
+            const dataInicio = new Date(torneio.data);
+            const dataFim = new Date(torneio.data_fim || torneio.data);
+            const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            
+            if (diasDuracao > 1) {
+              return (
+                <span className="text-xs text-gray-500">
+                  ({diasDuracao} dias)
+                </span>
+              );
+            }
+            return null;
+          })()}
+        </div>
+      </div>
 
-                    {/* Botão LetzPlay */}
-                    {torneio.link_letzplay && (
-                      <a
-                        href={torneio.link_letzplay}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all font-bold shadow-lg hover:shadow-xl group/btn"
-                      >
-                        <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                        Ver no LetzPlay
-                      </a>
-                    )}
-                  </div>
-                </div>
+      <div className="flex items-center gap-3 text-gray-700">
+        <div className="flex items-center justify-center w-10 h-10 bg-royal-100 rounded-lg">
+          <MapPin className="w-5 h-5 text-royal-600" />
+        </div>
+        <div>
+          <div className="font-semibold">{torneio.local}</div>
+          <div className="text-sm text-gray-500">{torneio.cidade}</div>
+        </div>
+      </div>
+    </div>
+
+    {/* Botão LetzPlay */}
+    {torneio.link_letzplay && (
+      <a
+        href={torneio.link_letzplay}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all font-bold shadow-lg hover:shadow-xl group/btn"
+      >
+        <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+        Ver no LetzPlay
+      </a>
+    )}
+  </div>
+</div>
               ))}
             </div>
           </div>

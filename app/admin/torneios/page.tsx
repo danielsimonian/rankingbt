@@ -12,6 +12,8 @@ import { verificarAdmin } from '@/lib/auth';
 import { getTorneios } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { Torneio, StatusTorneio } from '@/types/database';
+import TorneioLogo from '@/components/TorneioLogo';
+
 
 export default function TorneiosPage() {
   const [loading, setLoading] = useState(true);
@@ -235,87 +237,94 @@ export default function TorneiosPage() {
 
                 return (
                   <div
-                    key={torneio.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
-                  >
-                    {/* Header do Card */}
-                    <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <Trophy className="w-6 h-6 text-white" />
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border-2 ${statusInfo.color} bg-white`}>
-                          <StatusIcon className="w-3 h-3" />
-                          {statusInfo.label}
-                        </span>
-                      </div>
-                    </div>
+  key={torneio.id}
+  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
+>
+  {/* Header do Card */}
+  <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3">
+    <div className="flex items-center justify-between">
+      <Trophy className="w-6 h-6 text-white" />
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border-2 ${statusInfo.color} bg-white`}>
+        <StatusIcon className="w-3 h-3" />
+        {statusInfo.label}
+      </span>
+    </div>
+  </div>
 
-                    {/* Conteúdo */}
-                    <div className="p-4">
-                      <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-2">
-                        {torneio.nome}
-                      </h3>
+  {/* Conteúdo */}
+  <div className="p-4">
+    {/* LOGO DO TORNEIO - NOVO! */}
+    <div className="flex items-center justify-center mb-4">
+      <TorneioLogo 
+        logoUrl={torneio.logo_url}
+        nome={torneio.nome}
+        size="medium"
+      />
+    </div>
 
-                      <div className="space-y-2 mb-4">
-                        {/* Data com período */}
-                        <div className="flex items-start gap-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
-                          <span>{formatarPeriodo(torneio.data, torneio.data_fim)}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <MapPin className="w-4 h-4 text-primary-600" />
-                          <span>{torneio.local}</span>
-                        </div>
-                        
-                        <div className="text-sm text-gray-600">
-                          <span className="font-semibold">{torneio.cidade}</span>
-                        </div>
-                      </div>
+    <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-2 text-center">
+      {torneio.nome}
+    </h3>
 
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {/* Pontuação Custom */}
-                        {torneio.pontuacao_custom && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
-                            ⭐ Pontuação Especial
-                          </span>
-                        )}
-                        
-                        {/* Link LetzPlay */}
-                        {torneio.link_letzplay && (
-                          <a
-                            href={torneio.link_letzplay}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold hover:bg-blue-200 transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            LetzPlay
-                          </a>
-                        )}
-                      </div>
+    <div className="space-y-2 mb-4">
+      {/* Data com período */}
+      <div className="flex items-start gap-2 text-sm text-gray-600">
+        <Calendar className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
+        <span>{formatarPeriodo(torneio.data, torneio.data_fim)}</span>
+      </div>
+      
+      <div className="flex items-center gap-2 text-sm text-gray-600">
+        <MapPin className="w-4 h-4 text-primary-600" />
+        <span>{torneio.local}</span>
+      </div>
+      
+      <div className="text-sm text-gray-600">
+        <span className="font-semibold">{torneio.cidade}</span>
+      </div>
+    </div>
 
-                      {/* Ações */}
-                      <div className="flex gap-2 pt-4 border-t border-gray-200">
-                        <Link
-                          href={`/admin/torneios/${torneio.id}/editar`}
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-semibold text-sm"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(torneio.id, torneio.nome)}
-                          disabled={deletando === torneio.id}
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-semibold text-sm disabled:opacity-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Deletar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+    {/* Badges */}
+    <div className="flex flex-wrap gap-2 mb-4">
+      {torneio.pontuacao_custom && (
+        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+          ⭐ Pontuação Especial
+        </span>
+      )}
+      
+      {torneio.link_letzplay && (
+        <a
+          href={torneio.link_letzplay}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold hover:bg-blue-200 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExternalLink className="w-3 h-3" />
+          LetzPlay
+        </a>
+      )}
+    </div>
+
+    {/* Ações */}
+    <div className="flex gap-2 pt-4 border-t border-gray-200">
+      <Link
+        href={`/admin/torneios/${torneio.id}/editar`}
+        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-semibold text-sm"
+      >
+        <Edit2 className="w-4 h-4" />
+        Editar
+      </Link>
+      <button
+        onClick={() => handleDelete(torneio.id, torneio.nome)}
+        disabled={deletando === torneio.id}
+        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-semibold text-sm disabled:opacity-50"
+      >
+        <Trash2 className="w-4 h-4" />
+        Deletar
+      </button>
+    </div>
+  </div>
+</div>
                 );
               })}
             </div>

@@ -40,6 +40,7 @@ export interface Torneio {
   config_pontuacao_id?: string;  // ✅ ADICIONE ESTA LINHA
   created_at?: string;
   updated_at?: string;
+  logo_url?: string | null;
 }
 
 export interface Resultado {

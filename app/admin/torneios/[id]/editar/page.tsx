@@ -7,6 +7,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { verificarAdmin } from '@/lib/auth';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
+import LogoUpload from '@/components/LogoUpload';
 
 interface Configuracao {
   id: string;
@@ -25,6 +26,7 @@ export default function EditarTorneioPage({ params }: { params: { id: string } }
   const [saving, setSaving] = useState(false);
   const [configuracoes, setConfiguracoes] = useState<Configuracao[]>([]);
   const [configSelecionada, setConfigSelecionada] = useState<string>('');
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   
   const [formData, setFormData] = useState({
     nome: '',
@@ -37,6 +39,10 @@ export default function EditarTorneioPage({ params }: { params: { id: string } }
   });
 
   const router = useRouter();
+
+  const handleLogoChange = (url: string | null | undefined) => {
+    setLogoUrl(url || undefined);
+  };
 
   useEffect(() => {
     loadData();
@@ -83,6 +89,9 @@ export default function EditarTorneioPage({ params }: { params: { id: string } }
       status: torneioData.status,
     });
 
+    // Inicializar logo
+    setLogoUrl(torneioData.logo_url || undefined);
+
     // Selecionar config atual
     if (torneioData.config_pontuacao_id) {
       setConfigSelecionada(torneioData.config_pontuacao_id);
@@ -128,6 +137,7 @@ export default function EditarTorneioPage({ params }: { params: { id: string } }
           ...formData,
           config_pontuacao_id: configSelecionada,
           pontuacao_custom: pontuacao_custom,
+          logo_url: logoUrl,
         })
         .eq('id', params.id);
 
@@ -302,6 +312,14 @@ export default function EditarTorneioPage({ params }: { params: { id: string } }
                     <p className="text-xs text-gray-500 mt-1">
                       🔗 Link para página do torneio no LetzPlay (se houver)
                     </p>
+                  </div>
+
+                  {/* Logo do Torneio */}
+                  <div className="md:col-span-2">
+                    <LogoUpload
+                      currentLogoUrl={logoUrl}
+                      onLogoChange={handleLogoChange}
+                    />
                   </div>
                 </div>
               </div>
