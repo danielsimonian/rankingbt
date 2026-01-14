@@ -96,7 +96,7 @@ export default function ApoiadoresPage() {
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6 leading-tight">
             Apoiadores do
-            <span className="block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 bg-clip-text text-transparent mt-2">
+            <span className="pb-2 block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 bg-clip-text text-transparent mt-2">
               Ranking Oficial
             </span>
           </h1>
