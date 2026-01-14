@@ -1,0 +1,21 @@
+{
+  "name": "Ranking BT - Beach Tennis Baixada Santista",
+  "short_name": "Ranking BT",
+  "description": "Ranking oficial de Beach Tennis da Baixada Santista",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FFC107",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
