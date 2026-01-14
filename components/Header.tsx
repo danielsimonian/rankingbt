@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Trophy, Menu, X, LogOut, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
+
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,17 +31,8 @@ export default function Header() {
         <div className="flex h-20 justify-between items-center">
           {/* Premium Logo */}
           <Link href={isAdmin ? "/admin/dashboard" : "/"} className="flex items-center gap-3 group">
-            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-xl shadow-primary-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <Trophy className="w-7 h-7 text-white drop-shadow-lg" />
-            </div>
-            <div className="hidden sm:block">
-              <span className="font-black text-xl bg-gradient-to-r from-primary-600 via-primary-500 to-royal-600 bg-clip-text text-transparent">
-                Ranking BT
-              </span>
-              <div className="text-xs text-gray-600 font-bold -mt-1 tracking-wide">
-                {isAdmin ? 'ADMINISTRATIVO' : 'BAIXADA SANTISTA'}
-              </div>
-            </div>
+            <Image src="/logo.png" alt="Ranking BT" width={220} height={0} />
+
           </Link>
 
           {/* Desktop Navigation */}
