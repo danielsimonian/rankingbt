@@ -31,8 +31,7 @@ export default function Header() {
         <div className="flex h-20 justify-between items-center">
           {/* Premium Logo */}
           <Link href={isAdmin ? "/admin/dashboard" : "/"} className="flex items-center gap-3 group">
-            <Image src="/logo.png" alt="Ranking BT" width={220} height={0} />
-
+            <Image src={isAdmin ? "/og-image.png" : "/logo.png"} alt="Ranking BT" width={isAdmin ? 120 : 220} height={0} />
           </Link>
 
           {/* Desktop Navigation */}
