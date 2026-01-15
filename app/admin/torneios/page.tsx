@@ -68,38 +68,39 @@ export default function TorneiosPage() {
   };
 
   const formatarPeriodo = (dataInicio: string, dataFim?: string | null) => {
-    const inicio = new Date(dataInicio);
-    const fim = dataFim ? new Date(dataFim) : inicio;
-    const diasDuracao = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  // Corrigir timezone: adicionar 'T00:00:00' para forçar horário local
+  const inicio = new Date(dataInicio + 'T00:00:00');
+  const fim = dataFim ? new Date(dataFim + 'T00:00:00') : inicio;
+  const diasDuracao = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    if (dataInicio === dataFim || !dataFim) {
-      // Torneio de 1 dia
-      return inicio.toLocaleDateString('pt-BR', {
+  if (dataInicio === dataFim || !dataFim) {
+    // Torneio de 1 dia
+    return inicio.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  } else {
+    // Torneio multi-dia
+    const mesmoMes = inicio.getMonth() === fim.getMonth();
+    if (mesmoMes) {
+      return `${inicio.getDate()} a ${fim.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: 'long',
-        year: 'numeric'
-      });
+        year: 'numeric',
+      })} (${diasDuracao} dias)`;
     } else {
-      // Torneio multi-dia
-      const mesmoMes = inicio.getMonth() === fim.getMonth();
-      if (mesmoMes) {
-        return `${inicio.getDate()} a ${fim.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-        })} (${diasDuracao} dias)`;
-      } else {
-        return `${inicio.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: 'short',
-        })} a ${fim.toLocaleDateString('pt-BR', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-        })} (${diasDuracao} dias)`;
-      }
+      return `${inicio.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+      })} a ${fim.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })} (${diasDuracao} dias)`;
     }
-  };
+  }
+};
 
   const torneiosFiltrados = filtro === 'TODOS' 
     ? torneios 
