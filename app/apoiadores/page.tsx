@@ -16,7 +16,7 @@ const professores = [
     cidade: 'Santos',
     telefone: '(11) 98717-3766',
     whatsapp: '5511987173766',
-    instagram: '@thalesqueralt',
+    instagram: '@talesqueralt',
     especialidade: 'Iniciantes e Intermediários',
   },
   {
