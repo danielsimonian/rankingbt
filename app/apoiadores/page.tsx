@@ -11,13 +11,13 @@ import {
 const professores = [
   {
     id: '1',
-    nome: 'Professora Manu',
-    foto: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Manu&backgroundColor=fbbf24',
+    nome: 'Professor Tales',
+    foto: '/profs/avatar-thales.png',
     cidade: 'Santos',
-    telefone: '(13) 99999-9999',
-    whatsapp: '5513999999999',
-    instagram: '@profmanu',
-    especialidade: 'Iniciantes e Competição',
+    telefone: '(11) 98717-3766',
+    whatsapp: '5511987173766',
+    instagram: '@thalesqueralt',
+    especialidade: 'Iniciantes e Intermediários',
   },
   {
     id: '2',
