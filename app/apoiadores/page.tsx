@@ -27,7 +27,7 @@ const professores = [
     telefone: '(13) 97412-2195',
     whatsapp: '5513974122195',
     instagram: '@forehand_beach_tennis',
-    especialidade: 'Iniciantes ao Avançados',
+    especialidade: 'Iniciantes a Avançados',
   },
   {
     id: '3',
