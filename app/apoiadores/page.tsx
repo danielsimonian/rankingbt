@@ -44,14 +44,14 @@ const professores = [
 const points = [
   {
     id: '1',
-    nome: 'Arena Beach Santos',
-    logo: 'https://api.dicebear.com/7.x/shapes/svg?seed=Arena&backgroundColor=fbbf24',
-    endereco: 'Av. da Praia, 123',
+    nome: 'ASSESP - O Point do Jajá',
+    logo: '/points/logo-assesp.jpeg',
+    endereco: 'Avenida Vicente de Carvalho, 74',
     cidade: 'Santos',
-    telefone: '(13) 3333-3333',
-    whatsapp: '5513333333333',
-    instagram: '@arenabeach',
-    site: 'https://arenabeach.com.br',
+    telefone: '(13) 99176-0203',
+    whatsapp: '5513991760203',
+    instagram: '@pointdogonzagabt',
+    site: 'https://letzplay.me/assespgonzaga',
   },
   {
     id: '2',
