@@ -160,21 +160,72 @@ export default function ComoFuncionaPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Target className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>Pontuação varia por torneio (RBT 100, RBT 500, etc)</span>
+                  <span>Pontuação varia por torneio (RBT 10, RBT 50, RBT 100, RBT 200, RBT 400, até eventos especiais de 1000 pts)</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-5">
               <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-900">
-                  <p className="font-bold mb-1">⚠️ Importante:</p>
-                  <p>
-                    Cada torneio pode ter uma <strong>pontuação customizada</strong> 
-                    (exemplo: RBT 500 dá 5x mais pontos que RBT 100). 
-                    Verifique a configuração de cada torneio.
+                  <p className="font-bold mb-2 text-base">⚠️ Importante: Pontuação por Torneio</p>
+                  <p className="mb-4">
+                    Cada torneio pode ter uma <strong>pontuação diferente</strong> 
+                    baseada no número de participantes.
                   </p>
+                  <div className="bg-amber-100 rounded-lg p-4 mt-3 border border-amber-300">
+                    <p className="font-bold mb-3 text-amber-900">📊 Como é definida a pontuação do torneio:</p>
+                    <p className="mb-4 font-semibold">
+                      O número no nome do torneio representa a <strong>quantidade mínima de inscritos</strong>. 
+                      Quanto mais atletas participam, maior a pontuação distribuída!
+                    </p>
+                    <div className="mt-4 space-y-2 text-sm bg-white rounded-lg p-4 border border-amber-200">
+                      <p className="font-bold text-amber-900 mb-3">Níveis de Pontuação:</p>
+                      
+                      {/* Torneios Regulares */}
+                      <div className="space-y-2.5 mb-4 pb-4 border-b border-amber-200">
+                        <p className="font-bold text-sm text-amber-800 mb-3">TORNEIOS REGULARES:</p>
+                        <div className="space-y-2">
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                            <p className="font-bold text-orange-900">🎉 RBT 10</p>
+                            <p className="text-xs text-orange-800 mt-1">Torneios-festa (churrascos, eventos sociais, etc)</p>
+                          </div>
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <p className="font-bold text-green-900">🎾 RBT 50</p>
+                            <p className="text-xs text-green-800 mt-1">Mínimo de 50 atletas inscritos</p>
+                          </div>
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p className="font-bold text-blue-900">🏆 RBT 100</p>
+                            <p className="text-xs text-blue-800 mt-1">Mínimo de 100 atletas inscritos (padrão)</p>
+                          </div>
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                            <p className="font-bold text-purple-900">⭐ RBT 200</p>
+                            <p className="text-xs text-purple-800 mt-1">Mínimo de 200 atletas inscritos (grande)</p>
+                          </div>
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <p className="font-bold text-yellow-900">👑 RBT 400</p>
+                            <p className="text-xs text-yellow-800 mt-1">Mínimo de 400 atletas inscritos (premium)</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Eventos Especiais */}
+                      <div className="space-y-2 bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-300">
+                        <p className="font-bold text-sm text-purple-900 mb-3">🌟 EVENTOS ESPECIAIS:</p>
+                        <div className="space-y-2">
+                          <div className="bg-white border-2 border-purple-300 rounded-lg p-3">
+                            <p className="font-bold text-purple-900">🏅 RSS CLASSIC</p>
+                            <p className="text-xs text-purple-800 mt-1">Evento especial - <span className="font-black text-purple-700">1000 pontos</span> para o campeão</p>
+                          </div>
+                          <div className="bg-white border-2 border-pink-300 rounded-lg p-3">
+                            <p className="font-bold text-pink-900">🏆 RSS FINALS</p>
+                            <p className="text-xs text-pink-800 mt-1">Grande final do ano - Pontuação especial</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -302,6 +353,35 @@ export default function ComoFuncionaPage() {
                 Apenas os <strong>10 melhores resultados</strong> dos últimos 12 meses 
                 na sua categoria principal são contabilizados.
               </p>
+            </details>
+
+            <details className="bg-gray-50 rounded-lg p-4 cursor-pointer">
+              <summary className="font-bold text-gray-900 cursor-pointer">
+                ❓ Como é definida a pontuação de cada torneio (RBT 10, RBT 100, RBT 200, etc)?
+              </summary>
+              <div className="mt-3 text-gray-700 text-sm space-y-3">
+                <p className="font-semibold">
+                  O número representa a <strong>quantidade mínima de atletas inscritos</strong>. 
+                  Quanto mais participantes, maior a pontuação distribuída!
+                </p>
+                <div className="bg-white rounded-lg p-3 border border-gray-200">
+                  <p className="font-bold mb-2">Torneios regulares:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• <strong>RBT 10:</strong> Torneios-festa (churrascos, eventos sociais)</li>
+                    <li>• <strong>RBT 50:</strong> Mínimo de 50 atletas</li>
+                    <li>• <strong>RBT 100:</strong> Mínimo de 100 atletas (padrão)</li>
+                    <li>• <strong>RBT 200:</strong> Mínimo de 200 atletas</li>
+                    <li>• <strong>RBT 400:</strong> Mínimo de 400 atletas</li>
+                  </ul>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                  <p className="font-bold mb-2 text-purple-900">🌟 Eventos Especiais:</p>
+                  <ul className="space-y-1 text-xs text-purple-900">
+                    <li>• <strong>RSS CLASSIC:</strong> 1000 pontos para o campeão</li>
+                    <li>• <strong>RSS FINALS:</strong> Grande final do ano</li>
+                  </ul>
+                </div>
+              </div>
             </details>
           </div>
         </section>

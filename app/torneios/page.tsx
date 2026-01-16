@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import FormularioOrganizador from '@/components/FormularioOrganizador';
-import { Trophy, Calendar, MapPin, CheckCircle, Clock, ExternalLink, MessageCircle } from 'lucide-react';
+import { Trophy, Calendar, MapPin, CheckCircle, Clock, ExternalLink, MessageCircle, Award } from 'lucide-react';
 import TorneioLogo from '@/components/TorneioLogo';
 
 export const revalidate = 60;
@@ -24,6 +24,33 @@ export default async function TorneiosPage() {
     const dataFim = new Date(t.data_fim || t.data);
     return dataFim < hoje || t.status === 'realizado';
   }).reverse() || [];
+
+  // Função para determinar o tipo de pontuação
+  const getTipoPontuacao = (torneio: any) => {
+    if (!torneio.pontuacao_custom) return 'RBT100';
+    
+    const pontos = torneio.pontuacao_custom;
+    const campeao = pontos.campeao || 0;
+    
+    // Lógica para determinar o tipo baseado nos pontos do campeão
+    if (campeao >= 200) return 'RBT200';
+    if (campeao >= 150) return 'RBT150';
+    if (campeao >= 100) return 'RBT100';
+    if (campeao >= 50) return 'RBT50';
+    return 'CUSTOM';
+  };
+
+  // Função para cor do badge de pontuação
+  const getCorPontuacao = (tipo: string) => {
+    const cores = {
+      'RBT200': 'bg-gradient-to-r from-purple-500 to-purple-600 text-white',
+      'RBT150': 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
+      'RBT100': 'bg-gradient-to-r from-primary-500 to-primary-600 text-white',
+      'RBT50': 'bg-gradient-to-r from-green-500 to-green-600 text-white',
+      'CUSTOM': 'bg-gradient-to-r from-gray-500 to-gray-600 text-white',
+    };
+    return cores[tipo as keyof typeof cores] || cores.CUSTOM;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
@@ -52,117 +79,134 @@ export default async function TorneiosPage() {
               Próximos Torneios
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {proximosTorneios.map((torneio, index) => (
-                <div
-  key={torneio.id}
-  className="group bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-gray-100 hover:border-primary-200 hover:scale-105"
-  style={{ animationDelay: `${index * 100}ms` }}
->
-  {/* Status Badge */}
-  <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3">
-    <div className="flex items-center gap-2 text-white">
-      <CheckCircle className="w-5 h-5" />
-      <span className="font-black text-sm uppercase">Confirmado</span>
-    </div>
-  </div>
+              {proximosTorneios.map((torneio, index) => {
+                const tipoPontuacao = getTipoPontuacao(torneio);
+                const corPontuacao = getCorPontuacao(tipoPontuacao);
 
-  {/* Content */}
-  <div className="p-6">
-    {/* LOGO DO TORNEIO - NOVO! */}
-    <div className="flex items-center justify-center mb-4">
-      <TorneioLogo 
-        logoUrl={torneio.logo_url}
-        nome={torneio.nome}
-        size="large"
-      />
-    </div>
+                return (
+                  <div
+                    key={torneio.id}
+                    className="group bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-gray-100 hover:border-primary-200 hover:scale-105"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {/* Status Badge */}
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-black text-sm uppercase">Confirmado</span>
+                        </div>
+                        {/* Badge de Pontuação */}
+                        <div className={`${corPontuacao} px-3 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1`}>
+                          <Award className="w-3 h-3" />
+                          {tipoPontuacao}
+                        </div>
+                      </div>
+                    </div>
 
-    <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-primary-600 transition-colors text-center">
-      {torneio.nome}
-    </h3>
+                    {/* Content */}
+                    <div className="p-6">
+                      {/* LOGO DO TORNEIO */}
+                      <div className="flex items-center justify-center mb-4">
+                        <TorneioLogo 
+                          logoUrl={torneio.logo_url}
+                          nome={torneio.nome}
+                          size="large"
+                        />
+                      </div>
 
-    <div className="space-y-3 mb-6">
-      <div className="flex items-center gap-3 text-gray-700">
-        <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-lg">
-          <Calendar className="w-5 h-5 text-primary-600" />
-        </div>
-        <div className="flex-1">
-          <span className="font-semibold block">
-            {(() => {
-              const dataInicio = new Date(torneio.data);
-              const dataFim = new Date(torneio.data_fim || torneio.data);
-              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-              
-              if (torneio.data === torneio.data_fim || !torneio.data_fim) {
-                return dataInicio.toLocaleDateString('pt-BR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                });
-              } else {
-                const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
-                if (mesmoMes) {
-                  return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}`;
-                } else {
-                  return `${dataInicio.toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })} a ${dataFim.toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}`;
-                }
-              }
-            })()}
-          </span>
-          {(() => {
-            const dataInicio = new Date(torneio.data);
-            const dataFim = new Date(torneio.data_fim || torneio.data);
-            const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-            
-            if (diasDuracao > 1) {
-              return (
-                <span className="text-xs text-gray-500">
-                  ({diasDuracao} dias)
-                </span>
-              );
-            }
-            return null;
-          })()}
-        </div>
-      </div>
+                      {/* TÍTULO COM 2 LINHAS FIXAS - CARDS UNIFORMES */}
+                      <h3 
+                        className="font-black text-gray-900 mb-4 group-hover:text-primary-600 transition-colors text-center text-xl leading-tight line-clamp-2 px-2"
+                        style={{ minHeight: '3.5rem' }}
+                        title={torneio.nome}
+                      >
+                        {torneio.nome}
+                      </h3>
 
-      <div className="flex items-center gap-3 text-gray-700">
-        <div className="flex items-center justify-center w-10 h-10 bg-royal-100 rounded-lg">
-          <MapPin className="w-5 h-5 text-royal-600" />
-        </div>
-        <div>
-          <div className="font-semibold">{torneio.local}</div>
-          <div className="text-sm text-gray-500">{torneio.cidade}</div>
-        </div>
-      </div>
-    </div>
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-3 text-gray-700">
+                          <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-lg">
+                            <Calendar className="w-5 h-5 text-primary-600" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="font-semibold block">
+                              {(() => {
+                                const dataInicio = new Date(torneio.data + 'T00:00:00');
+                                const dataFim = new Date((torneio.data_fim || torneio.data) + 'T00:00:00');
+                                const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                                
+                                if (torneio.data === torneio.data_fim || !torneio.data_fim) {
+                                  return dataInicio.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  });
+                                } else {
+                                  const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
+                                  if (mesmoMes) {
+                                    return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                    })}`;
+                                  } else {
+                                    return `${dataInicio.toLocaleDateString('pt-BR', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    })} a ${dataFim.toLocaleDateString('pt-BR', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                    })}`;
+                                  }
+                                }
+                              })()}
+                            </span>
+                            {(() => {
+                              const dataInicio = new Date(torneio.data + 'T00:00:00');
+                              const dataFim = new Date((torneio.data_fim || torneio.data) + 'T00:00:00');
+                              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                              
+                              if (diasDuracao > 1) {
+                                return (
+                                  <span className="text-xs text-gray-500">
+                                    ({diasDuracao} dias)
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        </div>
 
-    {/* Botão LetzPlay */}
-    {torneio.link_letzplay && (
-      <a
-        href={torneio.link_letzplay}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all font-bold shadow-lg hover:shadow-xl group/btn"
-      >
-        <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-        Ver no LetzPlay
-      </a>
-    )}
-  </div>
-</div>
-              ))}
+                        <div className="flex items-center gap-3 text-gray-700">
+                          <div className="flex items-center justify-center w-10 h-10 bg-royal-100 rounded-lg">
+                            <MapPin className="w-5 h-5 text-royal-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold truncate">{torneio.local}</div>
+                            <div className="text-sm text-gray-500 truncate">{torneio.cidade}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botão LetzPlay */}
+                      {torneio.link_letzplay && (
+                        <a
+                          href={torneio.link_letzplay}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all font-bold shadow-lg hover:shadow-xl group/btn"
+                        >
+                          <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                          Ver no LetzPlay
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -176,78 +220,96 @@ export default async function TorneiosPage() {
             </h2>
             <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden">
               <div className="divide-y divide-gray-100">
-                {torneiosRealizados.map((torneio) => (
-                  <div
-                    key={torneio.id}
-                    className="p-6 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-bold text-gray-900">
-                            {torneio.nome}
-                          </h3>
-                          <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase">
-                            Realizado
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            {(() => {
-                              const dataInicio = new Date(torneio.data);
-                              const dataFim = new Date(torneio.data_fim || torneio.data);
-                              const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                              
-                              if (torneio.data === torneio.data_fim || !torneio.data_fim) {
-                                return dataInicio.toLocaleDateString('pt-BR', {
-                                  day: 'numeric',
-                                  month: 'long',
-                                  year: 'numeric',
-                                });
-                              } else {
-                                const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
-                                if (mesmoMes) {
-                                  return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                  })} (${diasDuracao} dias)`;
-                                } else {
-                                  return `${dataInicio.toLocaleDateString('pt-BR', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                  })} a ${dataFim.toLocaleDateString('pt-BR', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                  })} (${diasDuracao} dias)`;
-                                }
-                              }
-                            })()}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            {torneio.local} - {torneio.cidade}
-                          </div>
-                        </div>
-                      </div>
+                {torneiosRealizados.map((torneio) => {
+                  const tipoPontuacao = getTipoPontuacao(torneio);
+                  const corPontuacao = getCorPontuacao(tipoPontuacao);
 
-                      {/* Botão LetzPlay */}
-                      {torneio.link_letzplay && (
-                        <a
-                          href={torneio.link_letzplay}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-primary-100 text-gray-700 hover:text-primary-700 rounded-lg transition-all font-semibold text-sm group/btn whitespace-nowrap"
-                        >
-                          <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
-                          LetzPlay
-                        </a>
-                      )}
+                  return (
+                    <div
+                      key={torneio.id}
+                      className="p-6 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        {/* LOGO PEQUENO */}
+                        <TorneioLogo 
+                          logoUrl={torneio.logo_url}
+                          nome={torneio.nome}
+                          size="small"
+                          className="flex-shrink-0"
+                        />
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
+                            <h3 className="text-xl font-bold text-gray-900 truncate">
+                              {torneio.nome}
+                            </h3>
+                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase flex-shrink-0">
+                              Realizado
+                            </span>
+                            {/* Badge de Pontuação */}
+                            <div className={`${corPontuacao} px-3 py-1 rounded-full text-xs font-black shadow-md flex items-center gap-1 flex-shrink-0`}>
+                              <Award className="w-3 h-3" />
+                              {tipoPontuacao}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              {(() => {
+                                const dataInicio = new Date(torneio.data + 'T00:00:00');
+                                const dataFim = new Date((torneio.data_fim || torneio.data) + 'T00:00:00');
+                                const diasDuracao = Math.ceil((dataFim.getTime() - dataInicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                                
+                                if (torneio.data === torneio.data_fim || !torneio.data_fim) {
+                                  return dataInicio.toLocaleDateString('pt-BR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  });
+                                } else {
+                                  const mesmoMes = dataInicio.getMonth() === dataFim.getMonth();
+                                  if (mesmoMes) {
+                                    return `${dataInicio.getDate()} a ${dataFim.toLocaleDateString('pt-BR', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                    })} (${diasDuracao} dias)`;
+                                  } else {
+                                    return `${dataInicio.toLocaleDateString('pt-BR', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    })} a ${dataFim.toLocaleDateString('pt-BR', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                    })} (${diasDuracao} dias)`;
+                                  }
+                                }
+                              })()}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4" />
+                              {torneio.local} - {torneio.cidade}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Botão LetzPlay */}
+                        {torneio.link_letzplay && (
+                          <a
+                            href={torneio.link_letzplay}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-primary-100 text-gray-700 hover:text-primary-700 rounded-lg transition-all font-semibold text-sm group/btn whitespace-nowrap flex-shrink-0"
+                          >
+                            <ExternalLink className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                            LetzPlay
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

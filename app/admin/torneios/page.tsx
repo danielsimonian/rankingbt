@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, Calendar, MapPin, Trophy, Edit2, Trash2,
-  CheckCircle, Clock, Play, Filter, ExternalLink
+  CheckCircle, Clock, Play, Filter, ExternalLink, Award
 } from 'lucide-react';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 import { verificarAdmin } from '@/lib/auth';
@@ -67,40 +67,66 @@ export default function TorneiosPage() {
     return badges[status];
   };
 
-  const formatarPeriodo = (dataInicio: string, dataFim?: string | null) => {
-  // Corrigir timezone: adicionar 'T00:00:00' para forçar horário local
-  const inicio = new Date(dataInicio + 'T00:00:00');
-  const fim = dataFim ? new Date(dataFim + 'T00:00:00') : inicio;
-  const diasDuracao = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  // Função para determinar o tipo de pontuação
+  const getTipoPontuacao = (torneio: Torneio) => {
+    if (!torneio.pontuacao_custom) return 'RBT100';
+    
+    const pontos = torneio.pontuacao_custom;
+    const campeao = pontos.campeao || 0;
+    
+    if (campeao >= 200) return 'RBT200';
+    if (campeao >= 150) return 'RBT150';
+    if (campeao >= 100) return 'RBT100';
+    if (campeao >= 50) return 'RBT50';
+    return 'CUSTOM';
+  };
 
-  if (dataInicio === dataFim || !dataFim) {
-    // Torneio de 1 dia
-    return inicio.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  } else {
-    // Torneio multi-dia
-    const mesmoMes = inicio.getMonth() === fim.getMonth();
-    if (mesmoMes) {
-      return `${inicio.getDate()} a ${fim.toLocaleDateString('pt-BR', {
+  // Função para cor do badge de pontuação
+  const getCorPontuacao = (tipo: string) => {
+    const cores = {
+      'RBT200': 'bg-purple-100 text-purple-700',
+      'RBT150': 'bg-blue-100 text-blue-700',
+      'RBT100': 'bg-yellow-100 text-yellow-700',
+      'RBT50': 'bg-green-100 text-green-700',
+      'CUSTOM': 'bg-gray-100 text-gray-700',
+    };
+    return cores[tipo as keyof typeof cores] || cores.CUSTOM;
+  };
+
+  const formatarPeriodo = (dataInicio: string, dataFim?: string | null) => {
+    // Corrigir timezone: adicionar 'T00:00:00' para forçar horário local
+    const inicio = new Date(dataInicio + 'T00:00:00');
+    const fim = dataFim ? new Date(dataFim + 'T00:00:00') : inicio;
+    const diasDuracao = Math.ceil((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (dataInicio === dataFim || !dataFim) {
+      // Torneio de 1 dia
+      return inicio.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: 'long',
-        year: 'numeric',
-      })} (${diasDuracao} dias)`;
+        year: 'numeric'
+      });
     } else {
-      return `${inicio.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-      })} a ${fim.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      })} (${diasDuracao} dias)`;
+      // Torneio multi-dia
+      const mesmoMes = inicio.getMonth() === fim.getMonth();
+      if (mesmoMes) {
+        return `${inicio.getDate()} a ${fim.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })} (${diasDuracao} dias)`;
+      } else {
+        return `${inicio.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'short',
+        })} a ${fim.toLocaleDateString('pt-BR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })} (${diasDuracao} dias)`;
+      }
     }
-  }
-};
+  };
 
   const torneiosFiltrados = filtro === 'TODOS' 
     ? torneios 
@@ -235,97 +261,102 @@ export default function TorneiosPage() {
               {torneiosFiltrados.map((torneio) => {
                 const statusInfo = getStatusBadge(torneio.status);
                 const StatusIcon = statusInfo.icon;
+                const tipoPontuacao = getTipoPontuacao(torneio);
+                const corPontuacao = getCorPontuacao(tipoPontuacao);
 
                 return (
                   <div
-  key={torneio.id}
-  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
->
-  {/* Header do Card */}
-  <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3">
-    <div className="flex items-center justify-between">
-      <Trophy className="w-6 h-6 text-white" />
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border-2 ${statusInfo.color} bg-white`}>
-        <StatusIcon className="w-3 h-3" />
-        {statusInfo.label}
-      </span>
-    </div>
-  </div>
+                    key={torneio.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
+                  >
+                    {/* Header do Card */}
+                    <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <Trophy className="w-6 h-6 text-white" />
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold border-2 ${statusInfo.color} bg-white`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {statusInfo.label}
+                        </span>
+                      </div>
+                    </div>
 
-  {/* Conteúdo */}
-  <div className="p-4">
-    {/* LOGO DO TORNEIO - NOVO! */}
-    <div className="flex items-center justify-center mb-4">
-      <TorneioLogo 
-        logoUrl={torneio.logo_url}
-        nome={torneio.nome}
-        size="medium"
-      />
-    </div>
+                    {/* Conteúdo */}
+                    <div className="p-4">
+                      {/* LOGO DO TORNEIO */}
+                      <div className="flex items-center justify-center mb-4">
+                        <TorneioLogo 
+                          logoUrl={torneio.logo_url}
+                          nome={torneio.nome}
+                          size="medium"
+                        />
+                      </div>
 
-    <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-2 text-center">
-      {torneio.nome}
-    </h3>
+                      <h3 
+                        className="font-bold text-gray-900 text-lg mb-3 line-clamp-2 text-center"
+                        style={{ minHeight: '3.5rem' }}
+                      >
+                        {torneio.nome}
+                      </h3>
 
-    <div className="space-y-2 mb-4">
-      {/* Data com período */}
-      <div className="flex items-start gap-2 text-sm text-gray-600">
-        <Calendar className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
-        <span>{formatarPeriodo(torneio.data, torneio.data_fim)}</span>
-      </div>
-      
-      <div className="flex items-center gap-2 text-sm text-gray-600">
-        <MapPin className="w-4 h-4 text-primary-600" />
-        <span>{torneio.local}</span>
-      </div>
-      
-      <div className="text-sm text-gray-600">
-        <span className="font-semibold">{torneio.cidade}</span>
-      </div>
-    </div>
+                      <div className="space-y-2 mb-4">
+                        {/* Data com período */}
+                        <div className="flex items-start gap-2 text-sm text-gray-600">
+                          <Calendar className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
+                          <span>{formatarPeriodo(torneio.data, torneio.data_fim)}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4 text-primary-600" />
+                          <span>{torneio.local}</span>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600">
+                          <span className="font-semibold">{torneio.cidade}</span>
+                        </div>
+                      </div>
 
-    {/* Badges */}
-    <div className="flex flex-wrap gap-2 mb-4">
-      {torneio.pontuacao_custom && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
-          ⭐ Pontuação Especial
-        </span>
-      )}
-      
-      {torneio.link_letzplay && (
-        <a
-          href={torneio.link_letzplay}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold hover:bg-blue-200 transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ExternalLink className="w-3 h-3" />
-          LetzPlay
-        </a>
-      )}
-    </div>
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {/* BADGE DE PONTUAÇÃO RBT - SUBSTITUÍDO! */}
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 ${corPontuacao} rounded-full text-xs font-bold`}>
+                          <Award className="w-3 h-3" />
+                          {tipoPontuacao}
+                        </span>
+                        
+                        {torneio.link_letzplay && (
+                          <a
+                            href={torneio.link_letzplay}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold hover:bg-blue-200 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            LetzPlay
+                          </a>
+                        )}
+                      </div>
 
-    {/* Ações */}
-    <div className="flex gap-2 pt-4 border-t border-gray-200">
-      <Link
-        href={`/admin/torneios/${torneio.id}/editar`}
-        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-semibold text-sm"
-      >
-        <Edit2 className="w-4 h-4" />
-        Editar
-      </Link>
-      <button
-        onClick={() => handleDelete(torneio.id, torneio.nome)}
-        disabled={deletando === torneio.id}
-        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-semibold text-sm disabled:opacity-50"
-      >
-        <Trash2 className="w-4 h-4" />
-        Deletar
-      </button>
-    </div>
-  </div>
-</div>
+                      {/* Ações */}
+                      <div className="flex gap-2 pt-4 border-t border-gray-200">
+                        <Link
+                          href={`/admin/torneios/${torneio.id}/editar`}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-semibold text-sm"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Editar
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(torneio.id, torneio.nome)}
+                          disabled={deletando === torneio.id}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-semibold text-sm disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Deletar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
