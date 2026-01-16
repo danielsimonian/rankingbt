@@ -171,8 +171,8 @@ export default function ComoFuncionaPage() {
                 <div className="text-sm text-amber-900">
                   <p className="font-bold mb-2 text-base">⚠️ Importante: Pontuação por Torneio</p>
                   <p className="mb-4">
-                    Cada torneio pode ter uma <strong>pontuação diferente</strong> 
-                    baseada no número de participantes.
+                    Cada torneio pode ter uma <strong>pontuação diferente </strong> 
+                     baseada no número de participantes.
                   </p>
                   <div className="bg-amber-100 rounded-lg p-4 mt-3 border border-amber-300">
                     <p className="font-bold mb-3 text-amber-900">📊 Como é definida a pontuação do torneio:</p>
